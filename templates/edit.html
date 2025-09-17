@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Bewerk {{ config }}{% endblock %}
+
+{% block content %}
+<h1>Bewerk configuratie: {{ config }}</h1>
+<form method="POST">
+    <textarea id="editor" name="content">{{ content }}</textarea>
+    <button type="submit" class="btn btn-primary mt-3">Opslaan</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Annuleren</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+        mode: "yaml",
+        theme: "material-darker",
+        lineNumbers: true
+    });
+    editor.setSize("100%", "500px");
+</script>
+{% endblock %}
