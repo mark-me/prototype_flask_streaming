@@ -13,7 +13,7 @@ This project is a prototype web application built with Flask that allows you to 
 
 ## Installation
 
-### 1. Requirements
+### Requirements
 
    - Python 3.7+
    - [Flask](https://flask.palletsprojects.com/)
@@ -26,7 +26,7 @@ This project is a prototype web application built with Flask that allows you to 
    pip install flask pyyaml markdown
    ```
 
-### 2. Project Structure
+## Project Structure
 
 ```bash
 .
@@ -42,7 +42,7 @@ This project is a prototype web application built with Flask that allows you to 
 * Place your configuration files in the configs/ directory.
 * Log files are stored in the output/ directory.
 
-### 3. Running the Application
+## Running the Application
 
 Start the application locally with:
 
@@ -52,7 +52,7 @@ python [app.py]
 
 The web interface will be available at [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
-### 4. Usage
+## Usage
 
 * Navigate to the home page to see available configurations.
 * Edit a configuration using the "Edit" button.
@@ -62,7 +62,7 @@ The web interface will be available at [http://127.0.0.1:5000](http://127.0.0.1:
 * Download log files via the download link.
 * View application information on the "About" page.
 
-### Notes
+## Notes
 
 * Only .yml configuration files are supported.
 * Only .csv log files can be downloaded.
