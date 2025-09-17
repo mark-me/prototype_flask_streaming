@@ -1,0 +1,3 @@
+level,message,func
+ERROR,Foute boel,main
+WARNING,Wees gewaarschuwd,test

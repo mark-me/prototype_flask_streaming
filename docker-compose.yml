@@ -1,0 +1,12 @@
+services:
+  genesis-web:
+    build: .
+    container_name: genesis_web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./configs:/app/configs   # lokale configs beschikbaar in container
+      - ./output:/app/output     # output logs toegankelijk
+      - ./genesis.py:/app/genesis.py  # jouw Genesis CLI tool
+    environment:
+      - FLASK_ENV=production
