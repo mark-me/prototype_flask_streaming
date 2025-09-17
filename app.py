@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import markdown
 from flask import (
     Flask,
     Response,
@@ -68,6 +69,12 @@ def download_log():
         return send_file(log_path, as_attachment=True)
     return "Geen log gevonden", 404
 
+@app.route("/about")
+def about():
+    with open("about.md", encoding="utf-8") as f:
+        content = f.read()
+    html = markdown.markdown(content, extensions=["fenced_code", "tables"])
+    return render_template("about.html", content=html)
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True)

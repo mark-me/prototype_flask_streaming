@@ -10,6 +10,7 @@ power-designer:
     - "UsecaseV2.25b.ldm"
     - "DM_FactPoC.ldm"
     - "DM_DimPoC.ldm"
+    - "test.ldm"
 
 extractor:
   folder-output: "CentralLayer/Extracted Models"
