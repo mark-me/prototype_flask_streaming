@@ -1,2 +1,4 @@
 flask
 pyyaml
+markdown
+ansi2html

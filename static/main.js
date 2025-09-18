@@ -2,7 +2,7 @@ const consoleBox = document.getElementById("console");
 const evtSource = new EventSource("/stream");
 
 evtSource.onmessage = function(event) {
-    consoleBox.textContent += event.data + "\n";
+    consoleBox.innerHTML += event.data + "<br/>";
     consoleBox.scrollTop = consoleBox.scrollHeight;
 };
 

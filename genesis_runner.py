@@ -37,7 +37,7 @@ class GenesisRunner:
         Deze methode wordt uitgevoerd in een aparte thread en zorgt ervoor dat alle uitvoer beschikbaar is voor streaming.
         """
         for line in self.process.stdout:
-            self.queue_output.put(line.strip())
+            self.queue_output.put(line) #.strip())
         self.process.stdout.close()
 
     def stream_output(self):

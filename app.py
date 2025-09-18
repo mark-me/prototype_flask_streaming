@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 
 import markdown
+from ansi2html import Ansi2HTMLConverter
 from flask import (
     Flask,
     Response,
@@ -91,9 +92,11 @@ def stream() -> Response:
     """
 
     def generate():
+        conv = Ansi2HTMLConverter(inline=True)
         try:
             for line in runner.stream_output():
-                yield f"data: {line}\n\n"
+                html_line = conv.convert(line, full=False)
+                yield f"data: {html_line}\n\n"
         except Exception as e:
             yield f"data: [ERROR] {str(e)}\n\n"
 

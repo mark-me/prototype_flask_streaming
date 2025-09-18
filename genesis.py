@@ -1,6 +1,5 @@
 import argparse
 import sys
-from pathlib import Path
 
 BOLD_GREEN = "\x1b[1;32m"
 BOLD_RED = "\x1b[1;31m"
