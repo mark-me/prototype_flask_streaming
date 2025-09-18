@@ -36,11 +36,12 @@ def main():
     )
     args = parser.parse_args()
 
-    for _ in tqdm(
-        range(0, 100),
-        desc="Progress",
-        colour="yellow"
-    ):
+    print(
+        f"{BOLD_BLUE}{UNDERLINE}Start Genesis verwerking",
+        file=sys.stdout,
+    )
+
+    for _ in tqdm(range(0, 100), desc="Progress", colour="blue"):
         sleep(0.1)
 
     lst_answers_yes = ["", "J", "JA", "JAWOHL", "Y", "YES"]
