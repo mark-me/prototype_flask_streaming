@@ -60,7 +60,7 @@ The web interface will be available at [http://127.0.0.1:5000](http://127.0.0.1:
 * Follow the output live on the run page.
 * Send input to the process using the input field.
 * Download log files via the download link.
-* View application information on the "About" page.
+
 
 ## Notes
 
