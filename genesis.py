@@ -38,7 +38,7 @@ def main():
 
     for _ in tqdm(
         range(0, 100),
-        desc="Text You Want",
+        desc="Progress",
         colour="yellow"
     ):
         sleep(0.1)
