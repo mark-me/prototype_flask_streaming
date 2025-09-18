@@ -2,6 +2,7 @@ import subprocess
 import threading
 import queue
 import sys
+from pathlib import Path
 
 class GenesisRunner:
     """Beheert het uitvoeren van een Genesis-proces en de communicatie met invoer en uitvoer.
@@ -10,15 +11,15 @@ class GenesisRunner:
     """
     def __init__(self):
         self.process = None
-        self.output_queue = queue.Queue()
+        self.queue_output = queue.Queue()
 
-    def start(self, config_path):
+    def start(self, config_path: Path):
         """Start een nieuw Genesis-proces met het opgegeven configuratiebestand.
 
         Deze methode initialiseert het proces en start een thread om de uitvoer te verzamelen.
 
         Args:
-            config_path (str): Het pad naar het configuratiebestand.
+            config_path (Path): Het pad naar het configuratiebestand.
         """
         self.process = subprocess.Popen(
             [sys.executable, "genesis.py", config_path],
@@ -36,7 +37,7 @@ class GenesisRunner:
         Deze methode wordt uitgevoerd in een aparte thread en zorgt ervoor dat alle uitvoer beschikbaar is voor streaming.
         """
         for line in self.process.stdout:
-            self.output_queue.put(line.strip())
+            self.queue_output.put(line.strip())
         self.process.stdout.close()
 
     def stream_output(self):
@@ -49,13 +50,13 @@ class GenesisRunner:
         """
         while True:
             try:
-                line = self.output_queue.get(timeout=0.5)
+                line = self.queue_output.get(timeout=0.5)
                 yield line
             except queue.Empty:
                 if self.process.poll() is not None:
                     break
 
-    def send_input(self, text):
+    def send_input(self, text: str):
         """Stuurt invoer naar het actieve Genesis-proces.
 
         Deze methode schrijft de opgegeven tekst naar de standaardinvoer van het proces als het actief is.

@@ -18,12 +18,12 @@ from genesis_runner import GenesisRunner
 app = Flask(__name__)
 runner = GenesisRunner()
 
-CONFIG_DIR = "configs"
-OUTPUT_DIR = "output"
+CONFIG_DIR = Path("configs")
+OUTPUT_DIR = Path("output")
 
 
 @app.route("/")
-def index():
+def index() -> Response:
     """Toont de startpagina met een lijst van beschikbare configuratiebestanden.
 
     Deze functie verzamelt alle configuratiebestanden en rendert de indexpagina waarop deze worden weergegeven.
@@ -31,12 +31,18 @@ def index():
     Returns:
         Response: Een HTML-pagina met een lijst van configuratiebestanden.
     """
-    configs = sorted([f for f in os.listdir(CONFIG_DIR) if f.endswith(".yml")])
+    configs = sorted(
+        [
+            f
+            for f in CONFIG_DIR.iterdir()
+            if f.is_file and f.suffix.lower() in [".yaml", ".yml"]
+        ]
+    )
     return render_template("index.html", configs=configs)
 
 
 @app.route("/edit/<config>", methods=["GET", "POST"])
-def edit_config(config: str):
+def edit_config(config: str) -> Response:
     """Biedt een pagina om een configuratiebestand te bewerken en slaat wijzigingen op.
 
     Deze functie toont het bewerkingsformulier voor een configuratiebestand en verwerkt eventuele wijzigingen
@@ -48,7 +54,7 @@ def edit_config(config: str):
     Returns:
         Response: Een HTML-pagina voor het bewerken van de configuratie of een redirect na opslaan.
     """
-    path = os.path.join(CONFIG_DIR, config)
+    path = CONFIG_DIR / config
     if request.method == "POST":
         content = request.form["content"]
         with open(path, "w") as f:
@@ -60,7 +66,7 @@ def edit_config(config: str):
 
 
 @app.route("/run/<config>")
-def run_config(config: str):
+def run_config(config: str) -> Response:
     """Start een GenesisRunner-proces met het opgegeven configuratiebestand en toont de uitvoerpagina.
 
     Deze functie start het uitvoerproces voor de geselecteerde configuratie en rendert de bijbehorende pagina.
@@ -71,8 +77,7 @@ def run_config(config: str):
     Returns:
         Response: Een HTML-pagina die de uitvoer van het proces toont.
     """
-    path = os.path.join(CONFIG_DIR, config)
-    runner.start(path)
+    runner.start(config_path=CONFIG_DIR / config)
     return render_template("run.html", config=config)
 
 
@@ -86,12 +91,14 @@ def stream() -> Response:
     Returns:
         Response: Een Flask Response-object dat uitvoer streamt als text/event-stream.
     """
+
     def generate():
         try:
             for line in runner.stream_output():
                 yield f"data: {line}\n\n"
         except Exception as e:
             yield f"data: [ERROR] {str(e)}\n\n"
+
     return Response(generate(), mimetype="text/event-stream")
 
 
@@ -114,6 +121,7 @@ def send_input() -> dict:
         return {"status": "error", "message": f"Failed to send input: {str(e)}"}, 500
     return {"status": "ok"}
 
+
 @app.route("/download-log")
 def download_log() -> Response:
     """Maakt het mogelijk om een logbestand te downloaden als CSV-bestand.
@@ -128,10 +136,11 @@ def download_log() -> Response:
     # Only allow .csv files, no path separators, no directory traversal
     if not re.match(r"^[\w\-]+\.csv$", filename):
         return "Ongeldige bestandsnaam", 400
-    log_path = os.path.join(OUTPUT_DIR, filename)
-    if os.path.exists(log_path):
+    log_path = OUTPUT_DIR / filename
+    if log_path.exists():
         return send_file(log_path, as_attachment=True)
     return "Geen log gevonden", 404
+
 
 @app.route("/about")
 def about():
@@ -146,6 +155,7 @@ def about():
         content = f.read()
     html = markdown.markdown(content, extensions=["fenced_code", "tables"])
     return render_template("about.html", content=html)
+
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True)
