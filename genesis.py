@@ -41,7 +41,9 @@ def main():
         file=sys.stdout,
     )
 
-    for _ in tqdm(range(0, 100), desc="Progress", colour="blue"):
+    for _ in tqdm(range(0, 100), desc="Progress 1", colour="blue"):
+        sleep(0.1)
+    for _ in tqdm(range(0, 100), desc="Progress 2", colour="magenta"):
         sleep(0.1)
 
     lst_answers_yes = ["", "J", "JA", "JAWOHL", "Y", "YES"]
