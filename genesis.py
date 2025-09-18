@@ -1,5 +1,7 @@
 import argparse
 import sys
+from time import sleep
+from tqdm import tqdm
 
 BOLD_GREEN = "\x1b[1;32m"
 BOLD_RED = "\x1b[1;31m"
@@ -7,6 +9,7 @@ BOLD_BLUE = "\x1b[1;34m"
 UNDERLINE = "\x1b[4m"
 BOLD_YELLOW = "\x1b[1;33m"
 RESET = "\x1b[0m"
+
 
 def main():
     """
@@ -33,10 +36,19 @@ def main():
     )
     args = parser.parse_args()
 
+    for _ in tqdm(
+        range(0, 100),
+        desc="Text You Want",
+        colour="yellow"
+    ):
+        sleep(0.1)
+
     lst_answers_yes = ["", "J", "JA", "JAWOHL", "Y", "YES"]
     lst_answers_no = ["N", "NEE", "NEIN", "NO"]
     while True:
-        msg = f"{BOLD_YELLOW}Waarschuwingen gevonden, wil je doorgaan met? (J/n):{RESET}"
+        msg = (
+            f"{BOLD_YELLOW}Waarschuwingen gevonden, wil je doorgaan met? (J/n):{RESET}"
+        )
         print(msg, file=sys.stdout)
         answer = input(msg)
         if answer.upper() in lst_answers_no:
@@ -53,6 +65,7 @@ def main():
             )
 
     print(f"{BOLD_GREEN}Afgerond zonder fouten.{RESET}", file=sys.stdout)
+
 
 if __name__ == "__main__":
     main()

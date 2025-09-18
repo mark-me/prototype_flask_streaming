@@ -33,7 +33,7 @@ def index() -> Response:
     """
     configs = sorted(
         [
-            f
+            f.name
             for f in CONFIG_DIR.iterdir()
             if f.is_file and f.suffix.lower() in [".yaml", ".yml"]
         ]
@@ -54,6 +54,7 @@ def edit_config(config: Path) -> Response:
     Returns:
         Response: Een HTML-pagina voor het bewerken van de configuratie of een redirect na opslaan.
     """
+    test = CONFIG_DIR / config
     if request.method == "POST":
         content = request.form["content"]
         with open(config, "w") as f:
@@ -76,7 +77,7 @@ def run_config(config: Path) -> Response:
     Returns:
         Response: Een HTML-pagina die de uitvoer van het proces toont.
     """
-    runner.start(config_path=config)
+    runner.start(config_path=CONFIG_DIR / config)
     return render_template("run.html", config=config)
 
 
@@ -95,7 +96,7 @@ def stream() -> Response:
         conv = Ansi2HTMLConverter(inline=True)
         try:
             for line in runner.stream_output():
-                html_line = conv.convert(line, full=False)
+                html_line = conv.convert(line, full=False).rstrip()
                 yield f"data: {html_line}\n\n"
         except Exception as e:
             yield f"data: [ERROR] {str(e)}\n\n"
