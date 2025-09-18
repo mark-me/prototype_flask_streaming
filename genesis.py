@@ -50,7 +50,7 @@ def main():
     lst_answers_no = ["N", "NEE", "NEIN", "NO"]
     while True:
         msg = (
-            f"{BOLD_YELLOW}Waarschuwingen gevonden, wil je doorgaan met? (J/n):{RESET}"
+            f"{BOLD_YELLOW}Waarschuwingen gevonden, wil je doorgaan? (J/n):{RESET}"
         )
         print(msg, file=sys.stdout)
         answer = input(msg)
