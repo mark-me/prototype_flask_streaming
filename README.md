@@ -16,27 +16,30 @@ This project is a prototype web application built with Flask that allows you to 
 ### Requirements
 
    - Python 3.7+
-   - [Flask](https://flask.palletsprojects.com/)
-   - [PyYAML](https://pyyaml.org/)
-   - [Markdown](https://python-markdown.github.io/)
+   - [Flask](https://flask.palletsprojects.com/) - As the web-app framework
+   - [PyYAML](https://pyyaml.org/) - for reading YAML files
+   - [Markdown](https://python-markdown.github.io/) - To turn markdown into html content
+   - [ansi2html](https://ansi2html.readthedocs.io/) - To capture ANSI escape sequences in the CLI output and turn it into html formatting
 
    Install the required packages with pip:
 
    ```bash
-   pip install flask pyyaml markdown
+   pip install flask pyyaml markdown ansi2html
    ```
 
 ## Project Structure
 
 ```bash
 .
-├── [app.py](VALID_FILE)
-├── [genesis_runner.py]
+
 ├── configs/
 ├── output/
-├── templates/
 ├── static/
-└── [about.md]
+├── templates/
+├── [about.md]
+├── [app.py]
+├── [genesis_runner.py]
+└── [genesis.py]
 ```
 
 * Place your configuration files in the configs/ directory.
