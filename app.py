@@ -35,14 +35,14 @@ def index() -> Response:
         [
             f.name
             for f in CONFIG_DIR.iterdir()
-            if f.is_file and f.suffix.lower() in [".yaml", ".yml"]
+            if f.is_file() and f.suffix.lower() in [".yaml", ".yml"]
         ]
     )
     return render_template("index.html", configs=configs)
 
 
 @app.route("/edit/<config>", methods=["GET", "POST"])
-def edit_config(config: Path) -> Response:
+def edit_config(config: str) -> Response:
     """Biedt een pagina om een configuratiebestand te bewerken en slaat wijzigingen op.
 
     Deze functie toont het bewerkingsformulier voor een configuratiebestand en verwerkt eventuele wijzigingen
@@ -54,19 +54,18 @@ def edit_config(config: Path) -> Response:
     Returns:
         Response: Een HTML-pagina voor het bewerken van de configuratie of een redirect na opslaan.
     """
-    test = CONFIG_DIR / config
     if request.method == "POST":
         content = request.form["content"]
-        with open(config, "w") as f:
+        with open(CONFIG_DIR / config, "w") as f:
             f.write(content)
         return redirect(url_for("index"))
 
-    content = config.read_text()
+    content = (CONFIG_DIR / config).read_text()
     return render_template("edit.html", config=config, content=content)
 
 
 @app.route("/run/<config>")
-def run_config(config: Path) -> Response:
+def run_config(config: str) -> Response:
     """Start een GenesisRunner-proces met het opgegeven configuratiebestand en toont de uitvoerpagina.
 
     Deze functie start het uitvoerproces voor de geselecteerde configuratie en rendert de bijbehorende pagina.
