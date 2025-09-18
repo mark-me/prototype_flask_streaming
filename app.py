@@ -1,4 +1,3 @@
-import os
 import re
 from pathlib import Path
 
@@ -42,31 +41,30 @@ def index() -> Response:
 
 
 @app.route("/edit/<config>", methods=["GET", "POST"])
-def edit_config(config: str) -> Response:
+def edit_config(config: Path) -> Response:
     """Biedt een pagina om een configuratiebestand te bewerken en slaat wijzigingen op.
 
     Deze functie toont het bewerkingsformulier voor een configuratiebestand en verwerkt eventuele wijzigingen
     die door de gebruiker zijn ingediend.
 
     Args:
-        config (str): De naam van het te bewerken configuratiebestand.
+        config (Path): De naam van het te bewerken configuratiebestand.
 
     Returns:
         Response: Een HTML-pagina voor het bewerken van de configuratie of een redirect na opslaan.
     """
-    path = CONFIG_DIR / config
     if request.method == "POST":
         content = request.form["content"]
-        with open(path, "w") as f:
+        with open(config, "w") as f:
             f.write(content)
         return redirect(url_for("index"))
 
-    content = Path(path).read_text()
+    content = config.read_text()
     return render_template("edit.html", config=config, content=content)
 
 
 @app.route("/run/<config>")
-def run_config(config: str) -> Response:
+def run_config(config: Path) -> Response:
     """Start een GenesisRunner-proces met het opgegeven configuratiebestand en toont de uitvoerpagina.
 
     Deze functie start het uitvoerproces voor de geselecteerde configuratie en rendert de bijbehorende pagina.
@@ -77,7 +75,7 @@ def run_config(config: str) -> Response:
     Returns:
         Response: Een HTML-pagina die de uitvoer van het proces toont.
     """
-    runner.start(config_path=CONFIG_DIR / config)
+    runner.start(config_path=config)
     return render_template("run.html", config=config)
 
 
