@@ -1,4 +1,0 @@
-{"asctime": "2025-09-19 15:14:03,260", "levelname": "\u001b[33mWARNING\u001b[0m", "message": "Dit is een logger waarschuwing", "module": "genesis", "funcName": "main", "process": 107129}
-{"asctime": "2025-09-19 15:14:03,267", "levelname": "\u001b[31mERROR\u001b[0m", "message": "Dit is logger error", "module": "genesis", "funcName": "main", "process": 107129}
-{"asctime": "2025-09-19 15:15:33,628", "levelname": "\u001b[33mWARNING\u001b[0m", "message": "Dit is een logger waarschuwing", "module": "genesis", "funcName": "main", "process": 114504}
-{"asctime": "2025-09-19 15:15:33,639", "levelname": "\u001b[31mERROR\u001b[0m", "message": "Dit is logger error", "module": "genesis", "funcName": "main", "process": 114504}
