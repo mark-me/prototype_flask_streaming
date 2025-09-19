@@ -2,7 +2,6 @@ const consoleBox = document.getElementById("console");
 const evtSource = new EventSource("/stream");
 
 // Functie om de knoppen aan te passen op basis van de status
-/*
 function updateUI(status) {
     const questionButtons = document.getElementById("question-buttons");
     const downloadButton = document.getElementById("download-button");
@@ -15,7 +14,6 @@ function updateUI(status) {
         downloadButton.style.display = "block";  // Toon de download-knop
     }
 }
-*/
 
 evtSource.onmessage = function(event) {
         const line = event.data;
