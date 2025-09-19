@@ -2,18 +2,23 @@ import re
 from pathlib import Path
 
 import markdown
+import yaml
 from ansi2html import Ansi2HTMLConverter
 from flask import (
     Flask,
     Response,
+    current_app,
     redirect,
     render_template,
     request,
     send_file,
     url_for,
 )
-
 from genesis_runner import GenesisRunner
+
+from logtools import get_logger
+
+logger = get_logger(__name__)
 
 app = Flask(__name__)
 runner = GenesisRunner()
@@ -56,6 +61,12 @@ def edit_config(config: str) -> Response:
     """
     if request.method == "POST":
         content = request.form["content"]
+        try:
+            yaml.safe_load(content)
+        except yaml.YAMLError as e:
+            error_message = f"YAML is ongeldig: {str(e)}"
+            return render_template("edit.html", config=config, content=content, error=error_message)
+
         with open(CONFIG_DIR / config, "w") as f:
             f.write(content)
         return redirect(url_for("index"))
@@ -76,7 +87,15 @@ def run_config(config: str) -> Response:
     Returns:
         Response: Een HTML-pagina die de uitvoer van het proces toont.
     """
-    runner.start(config_path=CONFIG_DIR / config)
+    config_file_path = CONFIG_DIR / config
+    if not config_file_path.exists():
+        error_message = f"Configuratiebestand '{config}' niet gevonden."
+        return render_template("error.html", message=error_message), 404
+    try:
+        runner.start(config_path=config_file_path)
+    except Exception as e:
+        error_message = f"Fout bij het starten van de runner: {str(e)}"
+        return render_template("error.html", message=error_message), 500
     return render_template("run.html", config=config)
 
 
@@ -97,8 +116,11 @@ def stream() -> Response:
             for line in runner.stream_output():
                 html_line = conv.convert(line, full=False).rstrip()
                 yield f"data: {html_line}\n\n"
+        except (BrokenPipeError, ConnectionResetError):
+            return
         except Exception as e:
-            yield f"data: [ERROR] {str(e)}\n\n"
+            logger.exception("Exception occurred while streaming output")
+            yield "data: [ERROR] Er is een interne fout opgetreden tijdens het streamen.\n\n"
 
     return Response(generate(), mimetype="text/event-stream")
 
@@ -134,8 +156,8 @@ def download_log() -> Response:
         Response: Het CSV-bestand als download, of een foutmelding als het bestand niet geldig of niet gevonden is.
     """
     filename = request.args.get("filename", "sample.csv")
-    # Only allow .csv files, no path separators, no directory traversal
-    if not re.match(r"^[\w\-]+\.csv$", filename):
+    # Allow periods in the filename (except as path separators), e.g. 'log.2024-06-01.csv'
+    if not re.match(r"^[\w.\-]+\.csv$", filename):
         return "Ongeldige bestandsnaam", 400
     log_path = OUTPUT_DIR / filename
     if log_path.exists():
@@ -152,7 +174,8 @@ def about():
     Returns:
         Response: Een HTML-pagina met informatie over de applicatie.
     """
-    with open("src/app_genesis/static/about.md", encoding="utf-8") as f:
+    about_md_path = Path(current_app.static_folder) / "about.md"
+    with open(about_md_path, encoding="utf-8") as f:
         content = f.read()
     html = markdown.markdown(content, extensions=["fenced_code", "tables"])
     return render_template("about.html", content=html)
