@@ -27,7 +27,8 @@ class GenesisRunner:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            bufsize=1
+            bufsize=1,
+            encoding="utf8"
         )
         threading.Thread(target=self._enqueue_output, daemon=True).start()
 
