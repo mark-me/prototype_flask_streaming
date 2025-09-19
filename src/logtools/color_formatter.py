@@ -3,9 +3,9 @@ import logging
 class ColorFormatter(logging.Formatter):
     COLORS = {
         'DEBUG': "\033[37m",      # Grijs
-        'INFO': "\033[36m",       # Cyaan
-        'WARNING': "\033[33m",    # Geel
-        'ERROR': "\033[31m",      # Rood
+        'INFO': "\033[94m",       # Cyaan
+        'WARNING': "\033[93m",    # Geel
+        'ERROR': "\033[91m",      # Rood
         'CRITICAL': "\033[41m",   # Witte tekst op rode achtergrond
     }
     RESET = "\033[0m"

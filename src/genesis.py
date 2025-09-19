@@ -5,12 +5,13 @@ from tqdm import tqdm
 
 from logtools import get_logger
 
-BOLD_GREEN = "\x1b[1;32m"
-BOLD_RED = "\x1b[1;31m"
-BOLD_BLUE = "\x1b[1;34m"
-BOLD_CYAN = "\x1b[1;36m"
+BOLD_GREEN = "\x1b[1;92m"
+BOLD_RED = "\x1b[1;91m"
+BOLD_BLUE = "\x1b[1;94m"
+BOLD_CYAN = "\x1b[1;96m"
+BOLD_MAGENTA = "\x1b[1;95m"
+BOLD_YELLOW = "\x1b[1;93m"
 UNDERLINE = "\x1b[4m"
-BOLD_YELLOW = "\x1b[1;33m"
 RESET = "\x1b[0m"
 
 logger = get_logger(__name__)
