@@ -3,13 +3,17 @@ import sys
 from time import sleep
 from tqdm import tqdm
 
+from logtools import get_logger
+
 BOLD_GREEN = "\x1b[1;32m"
 BOLD_RED = "\x1b[1;31m"
 BOLD_BLUE = "\x1b[1;34m"
+BOLD_CYAN = "\x1b[1;36m"
 UNDERLINE = "\x1b[4m"
 BOLD_YELLOW = "\x1b[1;33m"
 RESET = "\x1b[0m"
 
+logger = get_logger(__name__)
 
 def main():
     """
@@ -37,9 +41,14 @@ def main():
     args = parser.parse_args()
 
     print(
-        f"{BOLD_BLUE}{UNDERLINE}Start Genesis verwerking",
+        f"{BOLD_CYAN}{UNDERLINE}Start Genesis verwerking{RESET}",
         file=sys.stdout,
     )
+
+    logger.info("Dit is logger info")
+    logger.warning("Dit is een logger waarschuwing")
+    logger.error("Dit is logger error")
+
 
     for _ in tqdm(range(0, 100), desc="Progress 1", colour="blue"):
         sleep(0.1)

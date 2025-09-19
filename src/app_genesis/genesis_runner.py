@@ -22,7 +22,7 @@ class GenesisRunner:
             config_path (Path): Het pad naar het configuratiebestand.
         """
         self.process = subprocess.Popen(
-            [sys.executable, "genesis.py", config_path],
+            [sys.executable, "src/genesis.py", config_path],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

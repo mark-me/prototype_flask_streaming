@@ -152,7 +152,7 @@ def about():
     Returns:
         Response: Een HTML-pagina met informatie over de applicatie.
     """
-    with open("about.md", encoding="utf-8") as f:
+    with open("src/app_genesis/static/about.md", encoding="utf-8") as f:
         content = f.read()
     html = markdown.markdown(content, extensions=["fenced_code", "tables"])
     return render_template("about.html", content=html)

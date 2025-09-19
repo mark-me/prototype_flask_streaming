@@ -1,0 +1,33 @@
+[project]
+name = "prototype_flask_streaming"
+version = "0.1.0"
+requires-python = ">=3.7.0"
+authors = [
+    { name = "Mark Zwart", email = "m_zwart@pobox.com" },
+]
+readme = "README.md"
+
+dependencies = [
+    "ansi2html==1.9.2",
+    "blinker==1.9.0",
+    "click==8.3.0",
+    "Flask==3.1.2",
+    "itsdangerous==2.2.0",
+    "Jinja2==3.1.6",
+    "Markdown==3.9",
+    "MarkupSafe==3.0.2",
+    "python-json-logger==3.3.0",
+    "PyYAML==6.0.2",
+    "tqdm==4.67.1",
+    "Werkzeug==3.1.3",
+]
+
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
