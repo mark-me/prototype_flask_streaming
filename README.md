@@ -29,19 +29,6 @@ This project is a prototype web application built with Flask that allows you to 
 
 ## Project Structure
 
-```bash
-.
-
-├── configs/
-├── output/
-├── static/
-├── templates/
-├── [about.md]
-├── [app.py]
-├── [genesis_runner.py]
-└── [genesis.py]
-```
-
 * Place your configuration files in the configs/ directory.
 * Log files are stored in the output/ directory.
 
