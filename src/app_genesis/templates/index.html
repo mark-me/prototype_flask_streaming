@@ -1,17 +1,109 @@
 {% extends "base.html" %}
-{% block title %}Genesis Configs{% endblock %}
+{% block title %}Home{% endblock %}
+
 {% block content %}
-<h1 class="mb-4">Beschikbare configuraties</h1>
-<p>Welkom bij de Genesis Web App. In dit scherm kunt u de configuratie kiezen, en eventueel aanpassen, die u wil gebruiken om Genesis mee aan te sturen.</p>
-<div class="list-group">
-    {% for cfg in configs %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            <strong>{{ cfg }}</strong>
-            <div>
-                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('config_edit', filename=cfg) }}">Bewerken</a>
-                <a class="btn btn-sm btn-success" href="{{ url_for('run_config', filename=cfg) }}">Uitvoeren</a>
-            </div>
+<div class="mt-4">
+    <!-- Introductie -->
+    <div class="row align-items-center mb-5">
+        <!-- Logo links -->
+        <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="Genesis Logo"
+                 class="img-fluid"
+                 style="max-width: 150px; height: auto;">
         </div>
-    {% endfor %}
+
+        <!-- Tekst rechts -->
+        <div class="col-md-10">
+            <h1 class="display-5 fw-bold">Welkom bij Genesis Web</h1>
+            <p class="lead text-muted">
+                Met Genesis Web beheer je eenvoudig <strong>YAML-configuratiebestanden</strong>, voer je Genesis uit
+                en download je logbestanden. Alles overzichtelijk vanuit één webinterface.
+            </p>
+        </div>
+    </div>
+
+    <!-- Stappenplan -->
+    <div class="row text-center mb-5">
+        <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-primary">
+                            <i class="bi bi-folder-check" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">1. Kies</h5>
+                        <p class="card-text">Selecteer een bestaand configuratiebestand of maak een nieuw bestand aan.</p>
+                    </div>
+                </div>
+        </div>
+
+        <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-pencil-square" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">2. Bewerk</h5>
+                        <p class="card-text">Open de ingebouwde editor om je configuratie direct aan te passen.</p>
+                    </div>
+                </div>
+
+        </div>
+
+        <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-success">
+                            <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">3. Run Genesis</h5>
+                        <p class="card-text">Start Genesis met een configuratie en volg de voortgang live in de console-uitvoer.</p>
+                    </div>
+                </div>
+
+        </div>
+
+        <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-info">
+                            <i class="bi bi-clipboard-x" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">4. Informeer</h5>
+                        <p class="card-text">Download bestand met de aangetroffen issues in de modelbestanden.</p>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <!-- Configuratie overzicht -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Beschikbare configuratiebestanden</h5>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for cfg in configs %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-text me-2 text-secondary"></i>{{ cfg }}</span>
+                <div>
+                    <a href="{{ url_for('config_edit', filename=cfg) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Bewerken
+                    </a>
+                    <a href="{{ url_for('config_run', filename=cfg) }}" class="btn btn-sm btn-success">
+                        <i class="bi bi-play"></i> Uitvoeren
+                    </a>
+                </div>
+            </li>
+            {% else %}
+            <li class="list-group-item text-muted">Geen configuratiebestanden gevonden.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="mt-3 text-end">
+        <a href="{{ url_for('config_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nieuwe Config
+        </a>
+    </div>
 </div>
 {% endblock %}

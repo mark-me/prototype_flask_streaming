@@ -27,9 +27,8 @@ app = Flask(__name__)
 app.secret_key = "supersecret"
 runner = GenesisRunner()
 
-CONFIG_DIR = Path("configs")
-OUTPUT_DIR = Path("output")
-
+CONFIG_DIR = Path("configs").resolve()
+OUTPUT_DIR = Path("output").resolve()
 
 @app.route("/")
 def index() -> Response:
@@ -85,7 +84,7 @@ def config_edit(filename):
     return render_template("config_edit.html", filename=filename, content=content)
 
 @app.route("/configs/new", methods=["GET", "POST"])
-def new_config():
+def config_new():
     configs = [f for f in os.listdir(CONFIG_DIR) if f.endswith(".yaml")]
 
     if request.method == "POST":
@@ -112,7 +111,7 @@ def new_config():
 
 
 @app.route("/run/<filename>")
-def run_config(filename: str) -> Response:
+def config_run(filename: str) -> Response:
     """Start een GenesisRunner-proces met het opgegeven configuratiebestand en toont de uitvoerpagina.
 
     Deze functie start het uitvoerproces voor de geselecteerde configuratie en rendert de bijbehorende pagina.
@@ -195,9 +194,9 @@ def download_log() -> Response:
     # Allow periods in the filename (except as path separators), e.g. 'log.2024-06-01.csv'
     if not re.match(r"^[\w.\-]+\.csv$", filename):
         return "Ongeldige bestandsnaam", 400
-    log_path = OUTPUT_DIR / filename
+    log_path = (OUTPUT_DIR / filename).resolve()
     if log_path.exists():
-        return send_file(log_path, as_attachment=True)
+        return send_file(str(log_path), as_attachment=True)
     return "Geen log gevonden", 404
 
 
