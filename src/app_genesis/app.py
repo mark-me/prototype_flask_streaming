@@ -51,6 +51,18 @@ def index() -> Response:
 
 @app.route("/configs/edit/<filename>", methods=["GET", "POST"])
 def config_edit(filename):
+    """Biedt een interface om een configuratiebestand te bewerken of op te slaan.
+
+    Deze functie verwerkt GET- en POST-verzoeken voor het bewerken, opslaan en opslaan als een nieuw configuratiebestand.
+    Bij een POST-verzoek wordt het bestand opgeslagen of als nieuw bestand aangemaakt, afhankelijk van de gekozen actie.
+    Bij een GET-verzoek wordt de inhoud van het geselecteerde bestand geladen en weergegeven.
+
+    Args:
+        filename (str): De naam van het te bewerken configuratiebestand.
+
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het configuratiebestand.
+    """
     file_path = os.path.join(CONFIG_DIR, filename)
 
     if request.method == "POST":
@@ -85,6 +97,16 @@ def config_edit(filename):
 
 @app.route("/configs/new", methods=["GET", "POST"])
 def config_new():
+    """Biedt een interface om een nieuwe configuratie aan te maken op basis van een bestaande.
+
+    Deze functie verwerkt GET- en POST-verzoeken voor het aanmaken van een nieuwe configuratie,
+    waarbij een bestaande als basis kan worden gekozen.
+    Bij een POST-verzoek wordt het nieuwe bestand aangemaakt en opgeslagen,
+    of wordt een foutmelding getoond als de naam al bestaat.
+
+    Returns:
+        Response: Een HTML-pagina voor het aanmaken van een nieuwe configuratie.
+    """
     configs = [f for f in os.listdir(CONFIG_DIR) if f.endswith(".yaml")]
 
     if request.method == "POST":
