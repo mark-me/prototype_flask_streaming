@@ -72,6 +72,9 @@
               <a class="nav-link {% if request.endpoint in ['index', 'edit_config', 'run_config'] %}active{% endif %}" href="{{ url_for('index') }}">Configs</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'new_config' %}active{% endif %}" href="{{ url_for('new_config') }}">Nieuwe Config</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link {% if request.endpoint == 'download_log' %}active{% endif %}" href="{{ url_for('download_log') }}">Logs</a>
             </li>
             <li class="nav-item">

@@ -1,5 +1,7 @@
 import re
 from pathlib import Path
+import shutil
+import os
 
 import markdown
 import yaml
@@ -8,6 +10,7 @@ from flask import (
     Flask,
     Response,
     current_app,
+    flash,
     redirect,
     render_template,
     request,
@@ -21,6 +24,7 @@ from logtools import get_logger
 logger = get_logger(__name__)
 
 app = Flask(__name__)
+app.secret_key = "supersecret"
 runner = GenesisRunner()
 
 CONFIG_DIR = Path("configs")
@@ -46,37 +50,69 @@ def index() -> Response:
     return render_template("index.html", configs=configs)
 
 
-@app.route("/edit/<config>", methods=["GET", "POST"])
-def edit_config(config: str) -> Response:
-    """Biedt een pagina om een configuratiebestand te bewerken en slaat wijzigingen op.
+@app.route("/configs/edit/<filename>", methods=["GET", "POST"])
+def config_edit(filename):
+    file_path = os.path.join(CONFIG_DIR, filename)
 
-    Deze functie toont het bewerkingsformulier voor een configuratiebestand en verwerkt eventuele wijzigingen
-    die door de gebruiker zijn ingediend.
-
-    Args:
-        config (Path): De naam van het te bewerken configuratiebestand.
-
-    Returns:
-        Response: Een HTML-pagina voor het bewerken van de configuratie of een redirect na opslaan.
-    """
     if request.method == "POST":
-        content = request.form["content"]
-        try:
-            yaml.safe_load(content)
-        except yaml.YAMLError as e:
-            error_message = f"YAML is ongeldig: {str(e)}"
-            return render_template("edit.html", config=config, content=content, error=error_message)
+        action = request.form.get("action")
+        content = request.form.get("content")
 
-        with open(CONFIG_DIR / config, "w") as f:
-            f.write(content)
-        return redirect(url_for("index"))
+        if action == "save":
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
 
-    content = (CONFIG_DIR / config).read_text()
-    return render_template("edit.html", config=config, content=content)
+        elif action == "save_as":
+            new_name = request.form.get("new_name").strip()
+            if not new_name.endswith(".yaml"):
+                new_name += ".yaml"
+
+            new_path = os.path.join(CONFIG_DIR, new_name)
+
+            if os.path.exists(new_path):
+                flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
+            else:
+                with open(new_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+                flash(f"✅ Bestand opgeslagen als '{new_name}'.", "success")
+                return redirect(url_for("config_edit", filename=new_name))
+
+    # bestand inladen
+    with open(file_path, encoding="utf-8") as f:
+        content = f.read()
+
+    return render_template("config_edit.html", filename=filename, content=content)
+
+@app.route("/configs/new", methods=["GET", "POST"])
+def new_config():
+    configs = [f for f in os.listdir(CONFIG_DIR) if f.endswith(".yaml")]
+
+    if request.method == "POST":
+        base_file = request.form["base_file"]
+        new_name = request.form["new_name"].strip()
+
+        if not new_name.endswith(".yaml"):
+            new_name += ".yaml"
+
+        base_path = os.path.join(CONFIG_DIR, base_file)
+        new_path = os.path.join(CONFIG_DIR, new_name)
+
+        if os.path.exists(new_path):
+            flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
+        else:
+            shutil.copy(base_path, new_path)
+            flash(
+                f"✅ Nieuwe config '{new_name}' aangemaakt op basis van '{base_file}'",
+                "success",
+            )
+            return redirect(url_for("config_edit", filename=new_name))
+
+    return render_template("config_new.html", configs=configs)
 
 
-@app.route("/run/<config>")
-def run_config(config: str) -> Response:
+@app.route("/run/<filename>")
+def run_config(filename: str) -> Response:
     """Start een GenesisRunner-proces met het opgegeven configuratiebestand en toont de uitvoerpagina.
 
     Deze functie start het uitvoerproces voor de geselecteerde configuratie en rendert de bijbehorende pagina.
@@ -87,16 +123,16 @@ def run_config(config: str) -> Response:
     Returns:
         Response: Een HTML-pagina die de uitvoer van het proces toont.
     """
-    config_file_path = CONFIG_DIR / config
+    config_file_path = CONFIG_DIR / filename
     if not config_file_path.exists():
-        error_message = f"Configuratiebestand '{config}' niet gevonden."
+        error_message = f"Configuratiebestand '{filename}' niet gevonden."
         return render_template("error.html", message=error_message), 404
     try:
         runner.start(config_path=config_file_path)
     except Exception as e:
         error_message = f"Fout bij het starten van de runner: {str(e)}"
         return render_template("error.html", message=error_message), 500
-    return render_template("run.html", config=config)
+    return render_template("run.html", config=filename)
 
 
 @app.route("/stream")
