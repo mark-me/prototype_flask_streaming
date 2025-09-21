@@ -107,7 +107,13 @@ def config_new():
     Returns:
         Response: Een HTML-pagina voor het aanmaken van een nieuwe configuratie.
     """
-    configs = [f for f in os.listdir(CONFIG_DIR) if f.endswith(".yaml")]
+    configs = sorted(
+        [
+            f.name
+            for f in CONFIG_DIR.iterdir()
+            if f.is_file() and f.suffix.lower() in [".yaml", ".yml"]
+        ]
+    )
 
     if request.method == "POST":
         base_file = request.form["base_file"]
