@@ -75,19 +75,19 @@ def config_edit(filename):
             flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
 
         elif action == "save_as":
-            new_name = request.form.get("new_name").strip()
-            if not new_name.endswith(".yaml"):
-                new_name += ".yaml"
+            file_name_new = request.form.get("new_name").strip()
+            if not file_name_new.endswith(".yaml"):
+                file_name_new += ".yaml"
 
-            new_path = os.path.join(CONFIG_DIR, new_name)
+            path_file_new = CONFIG_DIR / file_name_new
 
-            if os.path.exists(new_path):
+            if os.path.exists(path_file_new):
                 flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
             else:
-                with open(new_path, "w", encoding="utf-8") as f:
+                with open(path_file_new, "w", encoding="utf-8") as f:
                     f.write(content)
-                flash(f"✅ Bestand opgeslagen als '{new_name}'.", "success")
-                return redirect(url_for("config_edit", filename=new_name))
+                flash(f"✅ Bestand opgeslagen als '{file_name_new}'.", "success")
+                return redirect(url_for("config_edit", filename=file_name_new))
 
     # bestand inladen
     with open(file_path, encoding="utf-8") as f:
