@@ -179,6 +179,10 @@ def stream() -> Response:
             for line in runner.stream_output():
                 html_line = conv.convert(line, full=False).rstrip()
                 yield f"data: {html_line}\n\n"
+                if 'doorgaan' in html_line or 'antwoorden' in html_line:
+                    yield "data: asking_question"
+                elif 'Afgerond' in html_line:
+                    yield "data: finished"
         except (BrokenPipeError, ConnectionResetError):
             return
         except Exception as e:

@@ -24,10 +24,15 @@ evtSource.onmessage = function(event) {
             let lines = consoleBox.innerHTML.split("<br>");
             lines[lines.length - 1] = line;
             consoleBox.innerHTML = lines.join("<br>");
-        } else {
+        }
+        else if (line.includes("asking_question") || line.includes("finished")){
+            updateUI(line)
+        }
+        else {
             // gewone nieuwe regel toevoegen
             consoleBox.innerHTML += "<br>" + line;
         }
+
 
         consoleBox.scrollTop = consoleBox.scrollHeight;
     };
