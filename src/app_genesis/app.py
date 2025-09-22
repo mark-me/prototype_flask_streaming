@@ -180,9 +180,9 @@ def stream() -> Response:
                 html_line = conv.convert(line, full=False).rstrip()
                 yield f"data: {html_line}\n\n"
                 if 'doorgaan' in html_line or 'antwoorden' in html_line:
-                    yield "data: asking_question"
+                    yield "data: asking_question\n\n"
                 elif 'Afgerond' in html_line:
-                    yield "data: finished"
+                    yield "data: finished\n\n"
         except (BrokenPipeError, ConnectionResetError):
             return
         except Exception as e:
