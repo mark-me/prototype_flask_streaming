@@ -48,20 +48,22 @@ class GenesisConfig(BaseConfigApplication[GenesisConfigData]):
     Biedt toegang tot alle deelconfiguraties, paden en hulpfuncties voor het werken met configuratiebestanden.
     """
 
-    def __init__(self, file_config: str, create_dirs: True):
+    def __init__(self, file_config: str, create_version_dir: True):
         """
-        Initialiseert het ConfigFile object met een opgegeven configuratiebestand.
-        Leest de configuratie uit het YAML-bestand en bepaalt de versie voor de outputfolder.
+        Initialiseert de GenesisConfig met een configuratiebestand en optioneel het aanmaken van een versie-directory.
+        Laadt de configuratiegegevens, stelt de relevante paden en deelconfiguraties in, en bepaalt de volgende versie.
 
         Args:
             file_config (str): Het pad naar het configuratiebestand.
+            create_version_dir (bool): Of de versie-directory moet worden aangemaakt.
         """
         self._file = Path(file_config)
         data = self._read_file()
+        self.create_version_dir = create_version_dir
         self.folder_intermediate_root = data.folder_intermediate_root
         self.title = data.title
         self.ignore_warnings = data.ignore_warnings
-        self._version = self._determine_version()
+        self._version = self._determine_next_version()
         self.power_designer = PowerDesignerConfig(data.power_designer)
         self.extractor = ExtractorConfig(
             data.extractor, path_intermediate=self.path_intermediate
@@ -79,7 +81,7 @@ class GenesisConfig(BaseConfigApplication[GenesisConfigData]):
             data.devops, path_output_root=data.folder_intermediate_root
         )
 
-    def _determine_version(self) -> str:
+    def _determine_next_version(self) -> str:
         """
         Bepaalt de volgende versienaam voor de outputfolder op basis van bestaande versies.
         Zoekt naar bestaande versiemappen en verhoogt het patch-nummer, of start bij de standaardversie als er geen zijn.
@@ -190,5 +192,19 @@ class GenesisConfig(BaseConfigApplication[GenesisConfigData]):
             Path: Het pad naar de tussenliggende outputfolder.
         """
         folder = Path(self.folder_intermediate_root) / self.title / self._version
+        if self.create_version_dir:
+            folder.mkdir(parents=True, exist_ok=True)
+        return folder
+
+    @property
+    def path_intermediate_root(self) -> Path:
+        """
+        Returns the root intermediate output folder for this configuration.
+        Ensures the directory exists by creating it if necessary, based on the root and title.
+
+        Returns:
+            Path: The path to the root intermediate output folder.
+        """
+        folder = Path(self.folder_intermediate_root) / self.title
         folder.mkdir(parents=True, exist_ok=True)
         return folder

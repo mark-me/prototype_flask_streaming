@@ -49,7 +49,7 @@ def index() -> Response:
         ]
     )
     configs = [
-        GenesisConfig(file_config=path_config, create_dirs=False)
+        GenesisConfig(file_config=path_config, create_version_dir=False)
         for path_config in paths_config
     ]
     files_config = [path_config.name for path_config in paths_config]
