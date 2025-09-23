@@ -1,6 +1,6 @@
 title: "usecase-poc"
 
-folder-intermediate-root: "./etl_templates/intermediate"
+folder-intermediate-root: "./output"
 
 ignore-warnings: False
 

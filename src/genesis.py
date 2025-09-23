@@ -1,8 +1,11 @@
 import argparse
 import sys
+from pathlib import Path
 from time import sleep
+
 from tqdm import tqdm
 
+from config import GenesisConfig
 from logtools import get_logger
 
 BOLD_GREEN = "\x1b[1;92m"
@@ -40,6 +43,8 @@ def main():
         "-s", "--skip", action="store_true", help="Sla DevOps deployment over"
     )
     args = parser.parse_args()
+
+    config = GenesisConfig(file_config=Path(args.config_file))
 
     print(
         f"{BOLD_CYAN}{UNDERLINE}Start Genesis verwerking{RESET}",

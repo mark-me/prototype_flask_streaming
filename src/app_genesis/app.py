@@ -1,7 +1,7 @@
-import re
-from pathlib import Path
-import shutil
 import os
+import re
+import shutil
+from pathlib import Path
 
 import markdown
 import yaml
@@ -19,6 +19,7 @@ from flask import (
 )
 from genesis_runner import GenesisRunner
 
+from config import GenesisConfig
 from logtools import get_logger
 
 logger = get_logger(__name__)
@@ -30,6 +31,7 @@ runner = GenesisRunner()
 CONFIG_DIR = Path("configs").resolve()
 OUTPUT_DIR = Path("output").resolve()
 
+
 @app.route("/")
 def index() -> Response:
     """Toont de startpagina met een lijst van beschikbare configuratiebestanden.
@@ -39,14 +41,19 @@ def index() -> Response:
     Returns:
         Response: Een HTML-pagina met een lijst van configuratiebestanden.
     """
-    configs = sorted(
+    paths_config = sorted(
         [
-            f.name
+            f
             for f in CONFIG_DIR.iterdir()
             if f.is_file() and f.suffix.lower() in [".yaml", ".yml"]
         ]
     )
-    return render_template("index.html", configs=configs)
+    configs = [
+        GenesisConfig(file_config=path_config, create_dirs=False)
+        for path_config in paths_config
+    ]
+    files_config = [path_config.name for path_config in paths_config]
+    return render_template("index.html", configs=files_config)
 
 
 @app.route("/configs/edit/<filename>", methods=["GET", "POST"])
@@ -94,6 +101,7 @@ def config_edit(filename):
         content = f.read()
 
     return render_template("config_edit.html", filename=filename, content=content)
+
 
 @app.route("/configs/new", methods=["GET", "POST"])
 def config_new():
@@ -179,9 +187,9 @@ def stream() -> Response:
             for line in runner.stream_output():
                 html_line = conv.convert(line, full=False).rstrip()
                 yield f"data: {html_line}\n\n"
-                if 'doorgaan' in html_line or 'antwoorden' in html_line:
+                if "doorgaan" in html_line or "antwoorden" in html_line:
                     yield "data: asking_question\n\n"
-                elif 'Afgerond' in html_line:
+                elif "Afgerond" in html_line:
                     yield "data: finished\n\n"
         except (BrokenPipeError, ConnectionResetError):
             return

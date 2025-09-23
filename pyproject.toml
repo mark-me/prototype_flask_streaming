@@ -1,7 +1,7 @@
 [project]
 name = "prototype_flask_streaming"
 version = "0.1.0"
-requires-python = ">=3.7.0"
+requires-python = ">=3.13.0"
 authors = [
     { name = "Mark Zwart", email = "m_zwart@pobox.com" },
 ]
@@ -11,6 +11,7 @@ dependencies = [
     "ansi2html==1.9.2",
     "blinker==1.9.0",
     "click==8.3.0",
+    "dacite==1.9.2",
     "Flask==3.1.2",
     "itsdangerous==2.2.0",
     "Jinja2==3.1.6",
