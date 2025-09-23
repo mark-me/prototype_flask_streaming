@@ -20,7 +20,7 @@ function updateUI(status) {
         downloadButton.style.display = "none";  // Toon de download-knop
         //console.log("In progress");
     }
-    console.log(questionButtons.style.display, downloadButton.style.display);
+    console.log(status, questionButtons.style.display, downloadButton.style.display);
 }
 
 evtSource.onmessage = function (event) {
