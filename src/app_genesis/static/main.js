@@ -7,12 +7,12 @@ function updateUI(status) {
     const downloadButton = document.getElementById("download-button");
 
     if (status === 'asking_question') {
-        questionButtons.style.display = "block";  // Verberg de vraag-knoppen
-        downloadButton.style.display = "none";  // Toon de download-knop
+        questionButtons.style.display = "block";   // Toon de vraag-knoppen
+        downloadButton.style.display = "none";     // Verberg de download-knop
         //console.log("Show question buttons");
     } else if (status === 'finished') {
-        questionButtons.style.display = "block";  // Toon de vraag-knoppen
-        downloadButton.style.display = "none";  // Verberg de download-knop
+        questionButtons.style.display = "none";    // Verberg de vraag-knoppen
+        downloadButton.style.display = "block";    // Toon de download-knop
         evtSource.close();
         //console.log("Done");
     } else {

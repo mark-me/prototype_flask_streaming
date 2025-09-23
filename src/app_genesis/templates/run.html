@@ -8,19 +8,19 @@
     <div class="card-body console-box" id="console"></div>
 </div>
 
-<div class="mt-3">
-    <div id="question-buttons">
+<div class="mt-3 d-flex gap-2">
+    <div id="question-buttons" style="display:none;">
         <button class="btn btn-success" onclick="sendInput('J')">Ja</button>
-        <button id="" class="btn btn-danger" onclick="sendInput('N')">Nee</button>
+        <button class="btn btn-danger" onclick="sendInput('N')">Nee</button>
     </div>
-    <a class="btn btn-outline-secondary" href="{{ url_for('index') }}">Terug</a>
-</div>
 
-<div class="mt-4">
-    <div id="download-button">
+    <a class="btn btn-outline-secondary" href="{{ url_for('index') }}">Terug</a>
+
+    <div id="download-button" style="display:none;">
         <a href="{{ url_for('download_log') }}" class="btn btn-outline-primary">Download logbestand</a>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
