@@ -9,18 +9,16 @@ function updateUI(status) {
     if (status === 'asking_question') {
         questionButtons.style.display = "block";  // Verberg de vraag-knoppen
         downloadButton.style.display = "none";  // Toon de download-knop
-        console.log("Show question buttons");
+        //console.log("Show question buttons");
     } else if (status === 'finished') {
         questionButtons.style.display = "block";  // Toon de vraag-knoppen
         downloadButton.style.display = "none";  // Verberg de download-knop
         evtSource.close();
-        console.log("Done");
-    } else if (!status || status === '') {
-        console.log("Nothing")
+        //console.log("Done");
     } else {
         questionButtons.style.display = "none";  // Toon de vraag-knoppen
         downloadButton.style.display = "none";  // Toon de download-knop
-        console.log("In progress");
+        //console.log("In progress");
     }
     console.log(questionButtons.style.display, downloadButton.style.display);
 }
@@ -28,14 +26,13 @@ function updateUI(status) {
 evtSource.onmessage = function (event) {
     const line = event.data;
 
-    // tqdm updates (met carriage returns) → vervang laatste regel i.p.v. toevoegen
+    // tqdm updates (met carriage returns): vervang laatste regel i.p.v. toevoegen
     if (line.includes("%|")) {  // voorbeeld: voortgang
         // overschrijf laatste regel
         let lines = consoleBox.innerHTML.split("<br>");
         lines[lines.length - 1] = line;
         consoleBox.innerHTML = lines.join("<br>");
-    }
-    else {
+    } else if (line !== "finished" && line !== "asking_question"){
         // gewone nieuwe regel toevoegen
         consoleBox.innerHTML += "<br>" + line;
     }
