@@ -12,13 +12,13 @@
                  class="img-fluid"
                  style="max-width: 150px; height: auto;">
         </div>
-
         <!-- Tekst rechts -->
         <div class="col-md-10">
             <h1 class="display-5 fw-bold">Welkom bij Genesis</h1>
             <p class="lead text-muted">
                 Met Genesis Web beheer je eenvoudig <strong>YAML-configuratiebestanden</strong>, voer je Genesis uit
-                en download je logbestanden. Alles overzichtelijk vanuit één webinterface.
+                en verken je de resultaten. Ook kun je issues in de modellen identificeren.
+                Alles overzichtelijk vanuit één webinterface.
             </p>
         </div>
     </div>
@@ -31,7 +31,7 @@
                         <div class="mb-3 text-secondary">
                             <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
                         </div>
-                        <h5 class="card-title">1. Kies</h5>
+                        <h5 class="card-title">1. Kiezen</h5>
                         <p class="card-text">Selecteer een bestaand configuratiebestand of maak een nieuw bestand aan.</p>
                     </div>
                 </div>
@@ -43,7 +43,7 @@
                         <div class="mb-3 text-warning">
                             <i class="bi bi-pencil-square" style="font-size: 2rem;"></i>
                         </div>
-                        <h5 class="card-title">2. Bewerk</h5>
+                        <h5 class="card-title">2. Bewerken</h5>
                         <p class="card-text">Open de ingebouwde editor om je configuratie direct aan te passen.</p>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                         <div class="mb-3 text-success">
                             <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
                         </div>
-                        <h5 class="card-title">3. Run Genesis</h5>
+                        <h5 class="card-title">3. Uitvoeren</h5>
                         <p class="card-text">Start Genesis met een configuratie en volg de voortgang live in de console-uitvoer.</p>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
                         <div class="mb-3 text-primary">
                             <i class="bi bi-search" style="font-size: 2rem;"></i>
                         </div>
-                        <h5 class="card-title">4. Verken output</h5>
+                        <h5 class="card-title">4. Verkennen</h5>
                         <p class="card-text">Verken resultaten en aangetroffen issues in de modelbestanden.</p>
                     </div>
                 </div>
@@ -90,15 +90,15 @@
                         <i class="bi bi-pencil"></i> Bewerken
                     </a>
                     <a href="{{ url_for('config_run', filename=cfg.path_config) }}" class="btn btn-sm btn-success">
-                        <i class="bi bi-play"></i> Start Genesis
+                        <i class="bi bi-play"></i> Uitvoeren
                     </a>
                     {% if cfg.exists_output %}
                         <a href="{{ url_for('browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-search"></i> Verken output
+                            <i class="bi bi-search"></i> Resultaten
                         </a>
                     {% else %}
                         <a href="{{ url_for('browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled">
-                            <i class="bi bi-search"></i> Verken output
+                            <i class="bi bi-search"></i> Resultaten
                         </a>
                     {% endif %}
                 </div>
