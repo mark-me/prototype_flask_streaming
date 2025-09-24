@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from datetime import datetime
 from pathlib import Path
 
 import markdown
@@ -10,8 +11,8 @@ from flask import (
     Response,
     abort,
     current_app,
-    jsonify,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -64,13 +65,13 @@ def index() -> Response:
             "dir_output": GenesisConfig(
                 file_config=path_config, create_version_dir=False
             ).path_intermediate_root,
-            "exists_output":  GenesisConfig(
+            "exists_output": GenesisConfig(
                 file_config=path_config, create_version_dir=False
-            ).path_intermediate_root.exists()
+            ).path_intermediate_root.exists(),
         }
         for path_config in paths_config
     ]
-    #files_config = [path_config.name for path_config in paths_config]
+    # files_config = [path_config.name for path_config in paths_config]
     return render_template("index.html", configs=configs)
 
 
@@ -274,16 +275,19 @@ def browse(req_path):
             )
 
     path_files = sorted(path_absolute.iterdir(), key=lambda p: (p.is_file(), p.name))
-    file_list = []
-    for file in path_files:
-        rel_path = file.relative_to(ROOT_DIR)
-        file_list.append(
-            {
-                "name": file.name,
-                "path": str(rel_path),
-                "is_dir": file.is_dir(),
-            }
-        )
+    files_data = [
+        {"path": path_file, "stat": path_file.stat()} for path_file in path_files
+    ]
+    file_list = [
+        {
+            "name": file_data["path"].name,
+            "path": str(file_data["path"].relative_to(ROOT_DIR)),
+            "modifief": datetime.fromtimestamp(file_data["stat"].st_mtime),
+            "created": datetime.fromtimestamp(file_data["stat"].st_ctime),
+            "is_dir": file_data["path"].is_dir(),
+        }
+        for file_data in files_data
+    ]
 
     return render_template("browser.html", files=file_list, current_path=req_path)
 
