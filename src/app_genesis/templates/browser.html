@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Bestandsbrowser{% endblock %}
+
+{% block content %}
+<h1 class="mt-4 mb-4">Bestandsbrowser</h1>
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('browse', req_path='') }}">Root</a></li>
+    {% if current_path %}
+      {% set parts = current_path.split('/') %}
+      {% for i in range(parts|length) %}
+        {% set crumb_path = parts[:i+1]|join('/') %}
+        <li class="breadcrumb-item {% if loop.last %}active{% endif %}" {% if loop.last %}aria-current="page"{% endif %}>
+          {% if not loop.last %}
+            <a href="{{ url_for('browse', req_path=crumb_path) }}">{{ parts[i] }}</a>
+          {% else %}
+            {{ parts[i] }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    {% endif %}
+  </ol>
+</nav>
+
+{% if current_path %}
+  <a href="{{ url_for('browse', req_path=current_path.rsplit('/', 1)[0]) }}" class="btn btn-secondary mb-3">
+    <i class="bi bi-arrow-left"></i> Terug
+  </a>
+{% endif %}
+
+<table class="table table-hover align-middle">
+  <thead class="table-light">
+    <tr>
+      <th>Naam</th>
+      <th>Type</th>
+      <th>Acties</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for file in files %}
+      <tr>
+        <td>
+          {% if file.is_dir %}
+            <i class="bi bi-folder-fill text-warning"></i>
+            <a href="{{ url_for('browse', req_path=file.path) }}">{{ file.name }}</a>
+          {% else %}
+            <i class="bi bi-file-earmark-text"></i>
+            {{ file.name }}
+          {% endif %}
+        </td>
+        <td>{{ "Map" if file.is_dir else "Bestand" }}</td>
+        <td>
+          {% if not file.is_dir %}
+            <a href="{{ url_for('browse', req_path=file.path) }}" class="btn btn-sm btn-primary me-1" title="Openen">
+              <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            <a href="{{ url_for('download_file', filepath=file.path) }}" class="btn btn-sm btn-success" title="Downloaden" download>
+              <i class="bi bi-download"></i>
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

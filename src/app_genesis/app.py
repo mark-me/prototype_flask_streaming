@@ -1,3 +1,5 @@
+import csv
+import json
 import os
 import re
 import shutil
@@ -9,12 +11,15 @@ from ansi2html import Ansi2HTMLConverter
 from flask import (
     Flask,
     Response,
+    abort,
     current_app,
+    jsonify,
     flash,
     redirect,
     render_template,
     request,
     send_file,
+    send_from_directory,
     url_for,
 )
 from genesis_runner import GenesisRunner
@@ -30,6 +35,14 @@ runner = GenesisRunner()
 
 CONFIG_DIR = Path("configs").resolve()
 OUTPUT_DIR = Path("output").resolve()
+ROOT_DIR = Path(".").resolve()
+
+
+def secure_path(path):
+    full_path = ROOT_DIR / path
+    if ROOT_DIR not in full_path.parents:
+        abort(403)
+    return full_path
 
 
 @app.route("/")
@@ -218,6 +231,98 @@ def send_input() -> dict:
     except Exception as e:
         return {"status": "error", "message": f"Failed to send input: {str(e)}"}, 500
     return {"status": "ok"}
+
+
+@app.route("/browse/", defaults={"req_path": ""})
+@app.route("/browse/<path:req_path>")
+def browse(req_path):
+    abs_path = secure_path(req_path)
+
+    if not os.path.exists(abs_path):
+        return abort(404)
+
+    if os.path.isfile(abs_path):
+        ext = os.path.splitext(abs_path)[1].lower()
+        if ext == ".html":
+            return open_html(req_path)
+        elif ext == ".json":
+            return open_json(req_path)
+        elif ext == ".sql":
+            return redirect(url_for("edit_sql", file_path=req_path))
+        elif ext == ".csv":
+            return redirect(url_for("edit_csv", file_path=req_path))
+        else:
+            return send_from_directory(
+                os.path.dirname(abs_path),
+                os.path.basename(abs_path),
+                as_attachment=True,
+            )
+
+    files = os.listdir(abs_path)
+    file_list = []
+    for file in files:
+        file_path = os.path.join(abs_path, file)
+        rel_path = os.path.relpath(file_path, ROOT_DIR)
+        file_list.append(
+            {
+                "name": file,
+                "path": rel_path.replace("\\", "/"),
+                "is_dir": os.path.isdir(file_path),
+            }
+        )
+
+    return render_template("browser.html", files=file_list, current_path=req_path)
+
+
+@app.route("/open/html/<path:file_path>")
+def open_html(file_path):
+    abs_path = secure_path(file_path)
+    with open(abs_path, encoding="utf-8") as f:
+        content = f.read()
+    return Response(content, mimetype="text/html")
+
+
+@app.route("/open/json/<path:file_path>")
+def open_json(file_path):
+    abs_path = secure_path(file_path)
+    with open(abs_path, encoding="utf-8") as f:
+        data = json.load(f)
+    return render_template(
+        "view_json.html", data=json.dumps(data, indent=2), file_path=file_path
+    )
+
+
+@app.route("/edit/sql/<path:file_path>", methods=["GET", "POST"])
+def edit_sql(file_path):
+    abs_path = secure_path(file_path)
+    if request.method == "POST":
+        content = request.form["content"]
+        with open(abs_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return redirect(url_for("browse", req_path=os.path.dirname(file_path)))
+    with open(abs_path, encoding="utf-8") as f:
+        content = f.read()
+    return render_template("edit_sql.html", content=content, file_path=file_path)
+
+
+@app.route("/edit_csv/<path:path_file>")
+def edit_csv(path_file):
+    return render_template("edit_csv.html", filepath=path_file)
+
+@app.route("/get_csv_data/<path:path_file>")
+def get_csv_data(path_file):
+    full_path = os.path.join("path/naar/jouw/csvs", path_file)
+    with open(full_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.route("/save_csv_data/<path:path_file>", methods=["POST"])
+def save_csv_data(path_file):
+    data = request.get_json()
+    csv_data = data.get("csv", "")
+    full_path = os.path.join("path/naar/jouw/csvs", path_file)
+    with open(full_path, "w", encoding="utf-8") as f:
+        f.write(csv_data)
+    return jsonify({"status": "ok"})
 
 
 @app.route("/download-log")

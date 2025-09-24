@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SQL Bewerken</title>
+    <style>
+        #editor {
+            height: 400px;
+            width: 80vw;
+            border: 1px solid #ccc;
+        }
+    </style>
+    <!-- Ace Editor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.1/ace.js" integrity="sha512-fZQ5N+FQ3yXbNnZq72w2Ib7Y2xbN7sX+07NCEkE27e86pSUyKTOq3sXMqDqOFiMwlmRuJj3fYLQ3liwt/wLzHg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <h1>SQL-bestand bewerken: {{ file_path }}</h1>
+    <form method="POST" onsubmit="return submitForm()">
+        <div id="editor">{{ content|e }}</div>
+        <textarea name="content" id="content" style="display:none;"></textarea><br>
+        <button type="submit">Opslaan</button>
+    </form>
+
+    <script>
+        var editor = ace.edit("editor");
+        editor.session.setMode("ace/mode/sql");
+        editor.setTheme("ace/theme/github");
+        editor.setOptions({
+            fontSize: "14pt",
+            wrap: true
+        });
+
+        function submitForm(){
+            var content = editor.getValue();
+            document.getElementById('content').value = content;
+            return true; // submit form normally
+        }
+    </script>
+</body>
+</html>
