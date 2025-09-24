@@ -1,12 +1,9 @@
-import csv
 import json
 import os
-import re
 import shutil
 from pathlib import Path
 
 import markdown
-import yaml
 from ansi2html import Ansi2HTMLConverter
 from flask import (
     Flask,
@@ -62,11 +59,19 @@ def index() -> Response:
         ]
     )
     configs = [
-        GenesisConfig(file_config=path_config, create_version_dir=False)
+        {
+            "path_config": path_config.name,
+            "dir_output": GenesisConfig(
+                file_config=path_config, create_version_dir=False
+            ).path_intermediate_root,
+            "exists_output":  GenesisConfig(
+                file_config=path_config, create_version_dir=False
+            ).path_intermediate_root.exists()
+        }
         for path_config in paths_config
     ]
-    files_config = [path_config.name for path_config in paths_config]
-    return render_template("index.html", configs=files_config)
+    #files_config = [path_config.name for path_config in paths_config]
+    return render_template("index.html", configs=configs)
 
 
 @app.route("/configs/edit/<filename>", methods=["GET", "POST"])
@@ -313,12 +318,15 @@ def open_json(path_file):
     Returns:
         Response: Een HTML-pagina met de geformatteerde JSON-inhoud.
     """
+    # Beveilig het pad naar het JSON-bestand
     abs_path = secure_path(path_file)
+
+    # Lees de JSON-data
     with open(abs_path, encoding="utf-8") as f:
         data = json.load(f)
-    return render_template(
-        "view_json.html", data=json.dumps(data, indent=2), path_file=path_file
-    )
+
+    # Geef de data door aan de template
+    return render_template("view_json.html", data=data, path_file=path_file)
 
 
 @app.route("/edit/sql/<path:path_file>", methods=["GET", "POST"])

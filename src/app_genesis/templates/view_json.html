@@ -1,13 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>JSON Viewer</title>
-    <style>
-        pre { background: #f0f0f0; padding: 1em; border: 1px solid #ccc; }
-    </style>
-</head>
-<body>
-    <h1>JSON Viewer: {{ file_path }}</h1>
-    <pre>{{ data }}</pre>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}
+    JSON Viewer
+{% endblock %}
+
+{% block content %}
+    <h1>{{ path_file }}</h1>
+
+    <!-- De JSON data wordt hier ingevoegd -->
+    <textarea id="jsonEditor">{{ data | tojson }}</textarea>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        // CodeMirror editor configureren voor JSON met code folding
+        const editor = CodeMirror.fromTextArea(document.getElementById("jsonEditor"), {
+            mode: "application/json",  // JSON syntax
+            theme: "material-darker",  // Thema
+            lineNumbers: true,         // Toon lijnnummers
+            lineWrapping: true,        // Wrap lange lijnen
+            styleActiveLine: true,     // Markeer actieve regel
+            foldGutter: true,          // Sta code folding toe
+            gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"], // Voeg gutter voor folding toe
+            indentUnit: 4,             // Stel indentatie in (standaard 4 spaties)
+        });
+
+        // Pas de grootte van de editor aan
+        editor.setSize("100%", "500px");
+    </script>
+{% endblock %}
