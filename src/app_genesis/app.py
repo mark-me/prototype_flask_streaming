@@ -262,11 +262,9 @@ def browse(req_path):
         elif ext == ".csv":
             return redirect(url_for("edit_csv", path_file=req_path))
         else:
-            test1 = os.path.dirname(path_absolute)
-            test2 = os.path.basename(path_absolute)
             return send_from_directory(
-                os.path.dirname(path_absolute),
-                os.path.basename(path_absolute),
+                str(path_absolute.parent),
+                path_absolute.name,
                 as_attachment=True,
             )
 
