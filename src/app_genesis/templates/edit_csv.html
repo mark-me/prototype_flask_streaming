@@ -21,7 +21,7 @@
   });
 
   // Haal CSV op via endpoint
-  fetch("{{ url_for('get_csv_data', filepath=filepath) }}")
+  fetch("{{ url_for('get_csv_data', path_file=path_file) }}")
     .then(response => response.text())
     .then(csvText => {
       var parsed = Papa.parse(csvText, { header: true });
@@ -34,7 +34,7 @@
     var data = table.getData();
     var csv = Papa.unparse(data);
 
-    fetch("{{ url_for('save_csv_data', filepath=filepath) }}", {
+    fetch("{{ url_for('save_csv_data', path_file=path_file) }}", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ csv: csv })

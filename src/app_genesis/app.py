@@ -83,14 +83,14 @@ def config_edit(filename):
     Returns:
         Response: Een HTML-pagina voor het bewerken van het configuratiebestand.
     """
-    file_path = os.path.join(CONFIG_DIR, filename)
+    path_file = CONFIG_DIR / filename
 
     if request.method == "POST":
         action = request.form.get("action")
         content = request.form.get("content")
 
         if action == "save":
-            with open(file_path, "w", encoding="utf-8") as f:
+            with open(path_file, "w", encoding="utf-8") as f:
                 f.write(content)
             flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
 
@@ -110,7 +110,7 @@ def config_edit(filename):
                 return redirect(url_for("config_edit", filename=file_name_new))
 
     # bestand inladen
-    with open(file_path, encoding="utf-8") as f:
+    with open(path_file, encoding="utf-8") as f:
         content = f.read()
 
     return render_template("config_edit.html", filename=filename, content=content)
@@ -236,97 +236,174 @@ def send_input() -> dict:
 @app.route("/browse/", defaults={"req_path": ""})
 @app.route("/browse/<path:req_path>")
 def browse(req_path):
-    abs_path = secure_path(req_path)
+    """Biedt een bestandsbrowser waarmee gebruikers door mappen kunnen navigeren en bestanden kunnen openen of downloaden.
 
-    if not os.path.exists(abs_path):
+    Deze functie verwerkt het opgegeven pad, toont de inhoud van mappen of stuurt bestanden naar de juiste viewers of als download naar de client.
+
+    Args:
+        req_path (str): Het relatieve pad naar de te bekijken map of het bestand.
+
+    Returns:
+        Response: Een HTML-pagina met de inhoud van de map, of een bestand als download of in de juiste viewer.
+    """
+    path_absolute = secure_path(req_path)
+
+    if not path_absolute.exists():
         return abort(404)
 
-    if os.path.isfile(abs_path):
-        ext = os.path.splitext(abs_path)[1].lower()
+    if path_absolute.is_file():
+        ext = path_absolute.suffix
         if ext == ".html":
             return open_html(req_path)
         elif ext == ".json":
             return open_json(req_path)
         elif ext == ".sql":
-            return redirect(url_for("edit_sql", file_path=req_path))
+            return redirect(url_for("edit_sql", path_file=req_path))
         elif ext == ".csv":
-            return redirect(url_for("edit_csv", file_path=req_path))
+            return redirect(url_for("edit_csv", path_file=req_path))
         else:
+            test1 = os.path.dirname(path_absolute)
+            test2 = os.path.basename(path_absolute)
             return send_from_directory(
-                os.path.dirname(abs_path),
-                os.path.basename(abs_path),
+                os.path.dirname(path_absolute),
+                os.path.basename(path_absolute),
                 as_attachment=True,
             )
 
-    files = os.listdir(abs_path)
+    path_files = sorted(path_absolute.iterdir(), key=lambda p: (p.is_file(), p.name))
     file_list = []
-    for file in files:
-        file_path = os.path.join(abs_path, file)
-        rel_path = os.path.relpath(file_path, ROOT_DIR)
+    for file in path_files:
+        rel_path = file.relative_to(ROOT_DIR)
         file_list.append(
             {
-                "name": file,
-                "path": rel_path.replace("\\", "/"),
-                "is_dir": os.path.isdir(file_path),
+                "name": file.name,
+                "path": str(rel_path),
+                "is_dir": file.is_dir(),
             }
         )
 
     return render_template("browser.html", files=file_list, current_path=req_path)
 
 
-@app.route("/open/html/<path:file_path>")
-def open_html(file_path):
-    abs_path = secure_path(file_path)
+@app.route("/open/html/<path:path_file>")
+def open_html(path_file):
+    """Opent een HTML-bestand en retourneert de inhoud als HTML-respons.
+
+    Deze functie leest het opgegeven HTML-bestand en stuurt de inhoud terug naar de client als een HTML-pagina.
+
+    Args:
+        path_file (str): Het pad naar het HTML-bestand dat geopend moet worden.
+
+    Returns:
+        Response: De inhoud van het HTML-bestand als een Flask Response-object met mimetype 'text/html'.
+    """
+    abs_path = secure_path(path_file)
     with open(abs_path, encoding="utf-8") as f:
         content = f.read()
     return Response(content, mimetype="text/html")
 
 
-@app.route("/open/json/<path:file_path>")
-def open_json(file_path):
-    abs_path = secure_path(file_path)
+@app.route("/open/json/<path:path_file>")
+def open_json(path_file):
+    """Opent een JSON-bestand en toont de inhoud in een HTML-template.
+
+    Deze functie leest het opgegeven JSON-bestand, formatteert de inhoud en rendert deze in een HTML-pagina.
+
+    Args:
+        path_file (str): Het pad naar het JSON-bestand dat geopend moet worden.
+
+    Returns:
+        Response: Een HTML-pagina met de geformatteerde JSON-inhoud.
+    """
+    abs_path = secure_path(path_file)
     with open(abs_path, encoding="utf-8") as f:
         data = json.load(f)
     return render_template(
-        "view_json.html", data=json.dumps(data, indent=2), file_path=file_path
+        "view_json.html", data=json.dumps(data, indent=2), path_file=path_file
     )
 
 
-@app.route("/edit/sql/<path:file_path>", methods=["GET", "POST"])
-def edit_sql(file_path):
-    abs_path = secure_path(file_path)
+@app.route("/edit/sql/<path:path_file>", methods=["GET", "POST"])
+def edit_sql(path_file):
+    """Biedt een interface om een SQL-bestand te bewerken en op te slaan.
+
+    Deze functie verwerkt GET- en POST-verzoeken voor het bewerken en opslaan van een SQL-bestand.
+    Bij een POST-verzoek wordt het bestand opgeslagen en wordt de gebruiker teruggeleid naar de bestandsbrowser.
+    Bij een GET-verzoek wordt de inhoud van het bestand geladen en weergegeven.
+
+    Args:
+        path_file (str): Het pad naar het SQL-bestand dat bewerkt moet worden.
+
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het SQL-bestand of een redirect na opslaan.
+    """
+    abs_path = secure_path(path_file)
     if request.method == "POST":
         content = request.form["content"]
         with open(abs_path, "w", encoding="utf-8") as f:
             f.write(content)
-        return redirect(url_for("browse", req_path=os.path.dirname(file_path)))
+        return redirect(url_for("browse", req_path=os.path.dirname(path_file)))
     with open(abs_path, encoding="utf-8") as f:
         content = f.read()
-    return render_template("edit_sql.html", content=content, file_path=file_path)
+    return render_template("edit_sql.html", content=content, file_path=path_file)
 
 
 @app.route("/edit_csv/<path:path_file>")
 def edit_csv(path_file):
-    return render_template("edit_csv.html", filepath=path_file)
+    """Biedt een interface om een CSV-bestand te bewerken.
+
+    Deze functie rendert een HTML-pagina waarmee gebruikers het opgegeven CSV-bestand kunnen bekijken en bewerken.
+
+    Args:
+        path_file (str): Het pad naar het CSV-bestand dat bewerkt moet worden.
+
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het CSV-bestand.
+    """
+    path_file = Path(path_file).resolve()
+    return render_template("edit_csv.html", path_file=path_file)
+
 
 @app.route("/get_csv_data/<path:path_file>")
 def get_csv_data(path_file):
-    full_path = os.path.join("path/naar/jouw/csvs", path_file)
-    with open(full_path, "r", encoding="utf-8") as f:
+    """Haalt de inhoud van een CSV-bestand op en retourneert deze als tekst.
+
+    Deze functie leest het opgegeven CSV-bestand en stuurt de inhoud terug naar de client.
+
+    Args:
+        path_file (str): Het pad naar het CSV-bestand dat opgehaald moet worden.
+
+    Returns:
+        str: De inhoud van het CSV-bestand als tekst.
+    """
+    path_file = Path(path_file).resolve()
+    with open(path_file, "r", encoding="utf-8") as f:
         return f.read()
+
 
 @app.route("/save_csv_data/<path:path_file>", methods=["POST"])
 def save_csv_data(path_file):
+    """Slaat de ontvangen CSV-gegevens op in het opgegeven bestandspad.
+
+    Deze functie ontvangt CSV-data via een POST-verzoek en schrijft deze naar het opgegeven bestand.
+    Na het succesvol opslaan van de gegevens wordt een bevestiging in JSON-formaat geretourneerd.
+
+    Args:
+        path_file (str): Het pad naar het CSV-bestand waarin de gegevens moeten worden opgeslagen.
+
+    Returns:
+        Response: Een JSON-object met de status van de opslagoperatie.
+    """
     data = request.get_json()
     csv_data = data.get("csv", "")
-    full_path = os.path.join("path/naar/jouw/csvs", path_file)
-    with open(full_path, "w", encoding="utf-8") as f:
+    path_file = Path(path_file).resolve()
+    with open(path_file, "w", encoding="utf-8") as f:
         f.write(csv_data)
     return jsonify({"status": "ok"})
 
 
-@app.route("/download-log")
-def download_log() -> Response:
+@app.route("/download-file/<path:path_file>")
+def download_file(path_file) -> Response:
     """Maakt het mogelijk om een logbestand te downloaden als CSV-bestand.
 
     Deze functie valideert de bestandsnaam, controleert of het logbestand bestaat en stuurt het bestand naar de client.
@@ -335,13 +412,9 @@ def download_log() -> Response:
     Returns:
         Response: Het CSV-bestand als download, of een foutmelding als het bestand niet geldig of niet gevonden is.
     """
-    filename = request.args.get("filename", "sample.csv")
-    # Allow periods in the filename (except as path separators), e.g. 'log.2024-06-01.csv'
-    if not re.match(r"^[\w.\-]+\.csv$", filename):
-        return "Ongeldige bestandsnaam", 400
-    log_path = (OUTPUT_DIR / filename).resolve()
-    if log_path.exists():
-        return send_file(str(log_path), as_attachment=True)
+    path_file = Path(path_file).resolve()
+    if path_file.exists():
+        return send_file(path_file, as_attachment=True)
     return "Geen log gevonden", 404
 
 
