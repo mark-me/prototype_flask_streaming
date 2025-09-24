@@ -66,11 +66,11 @@
         <div class="col-md-3">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-body">
-                        <div class="mb-3 text-danger">
-                            <i class="bi bi-clipboard-x" style="font-size: 2rem;"></i>
+                        <div class="mb-3 text-info">
+                            <i class="bi bi-search" style="font-size: 2rem;"></i>
                         </div>
-                        <h5 class="card-title">4. Informeer</h5>
-                        <p class="card-text">Download bestand met de aangetroffen issues in de modelbestanden.</p>
+                        <h5 class="card-title">4. Verken output</h5>
+                        <p class="card-text">Verken resultaten en aangetroffen issues in de modelbestanden.</p>
                     </div>
                 </div>
         </div>
@@ -94,11 +94,11 @@
                     </a>
                     {% if cfg.exists_output %}
                         <a href="{{ url_for('browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-folder-fill"></i> Verken output
+                            <i class="bi bi-search"></i> Verken output
                         </a>
                     {% else %}
                         <a href="{{ url_for('browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-outline-primary disabled">
-                            <i class="bi bi-folder-fill"></i> Verken output
+                            <i class="bi bi-search"></i> Verken output
                         </a>
                     {% endif %}
                 </div>
