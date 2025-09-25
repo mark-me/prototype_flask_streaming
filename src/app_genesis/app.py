@@ -95,6 +95,8 @@ def config_edit(filename):
         action = request.form.get("action")
         content = request.form.get("content")
 
+        content = content.replace('\r\n', '\n')
+
         if action == "save":
             with open(path_file, "w", encoding="utf-8") as f:
                 f.write(content)
@@ -282,7 +284,7 @@ def browse(req_path):
         {
             "name": file_data["path"].name,
             "path": str(file_data["path"].relative_to(ROOT_DIR)).replace("\\", "/"),
-            "modifief": datetime.fromtimestamp(file_data["stat"].st_mtime),
+            "modified": datetime.fromtimestamp(file_data["stat"].st_mtime),
             "created": datetime.fromtimestamp(file_data["stat"].st_ctime),
             "is_dir": file_data["path"].is_dir(),
         }

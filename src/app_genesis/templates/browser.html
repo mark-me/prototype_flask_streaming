@@ -34,6 +34,8 @@
     <tr>
       <th>Naam</th>
       <th>Type</th>
+      <th>Gecreëerd</th>
+      <th>Aangepast</th>
       <th>Acties</th>
     </tr>
   </thead>
@@ -50,6 +52,8 @@
           {% endif %}
         </td>
         <td>{{ "Map" if file.is_dir else "Bestand" }}</td>
+        <td>{{ file.created.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ file.modified.strftime("%Y-%m-%d %H:%M") }}</td>
         <td>
           {% if not file.is_dir %}
             <a href="{{ url_for('browse', req_path=file.path) }}" target="_blank" class="btn btn-sm btn-primary me-1" title="Openen">

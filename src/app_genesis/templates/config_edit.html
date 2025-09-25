@@ -2,21 +2,25 @@
 {% block title %}Config bewerken{% endblock %}
 
 {% block content %}
-<h2>Config bewerken: {{ filename }}</h2>
+<div class="d-flex justify-content-between mt-3">
+  <h2>YAML bewerken</h2>
+  <a href="#" onclick="close_window();return false;" class="btn btn-close" aria-label="Close">
+  </a>
+</div>
 
 <form method="post" class="mt-3">
-    <textarea id="editor" name="content" rows="20" class="form-control">{{ content }}</textarea>
+  <textarea id="editor" name="content" rows="20" class="form-control">{{ content | e }}</textarea>
 
-    <div class="d-flex justify-content-between mt-3">
-        <!-- Gewoon opslaan -->
-        <button type="submit" name="action" value="save" class="btn btn-success">Opslaan</button>
+  <div class="d-flex justify-content-between mt-3">
+      <!-- Gewoon opslaan -->
+      <button type="submit" name="action" value="save" class="btn btn-success">Opslaan</button>
 
-        <!-- Opslaan als -->
-        <div class="input-group" style="max-width: 400px;">
-            <input type="text" name="new_name" class="form-control" placeholder="Nieuwe bestandsnaam">
-            <button type="submit" name="action" value="save_as" class="btn btn-warning">Opslaan als</button>
-        </div>
-    </div>
+      <!-- Opslaan als -->
+      <div class="input-group" style="max-width: 400px;">
+          <input type="text" name="new_name" class="form-control" placeholder="Nieuwe bestandsnaam">
+          <button type="submit" name="action" value="save_as" class="btn btn-warning">Opslaan als</button>
+      </div>
+  </div>
 </form>
 
 {% with messages = get_flashed_messages(with_categories=true) %}

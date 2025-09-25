@@ -44,7 +44,7 @@ def main():
     )
     args = parser.parse_args()
 
-    config = GenesisConfig(file_config=Path(args.config_file))
+    config = GenesisConfig(file_config=Path(args.config_file), create_version_dir=False)
 
     print(
         f"{BOLD_CYAN}{UNDERLINE}Start Genesis verwerking{RESET}",
