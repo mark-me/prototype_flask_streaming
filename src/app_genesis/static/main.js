@@ -54,3 +54,9 @@ function sendInput(value) {
         body: JSON.stringify({ value: value })
     });
 }
+
+function close_window() {
+  if (confirm("Wil je deze tab afsluiten?\nWijzigingen worden niet opgeslagen.")) {
+    close();
+  }
+}

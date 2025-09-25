@@ -52,7 +52,7 @@
         <td>{{ "Map" if file.is_dir else "Bestand" }}</td>
         <td>
           {% if not file.is_dir %}
-            <a href="{{ url_for('browse', req_path=file.path) }}" class="btn btn-sm btn-primary me-1" title="Openen">
+            <a href="{{ url_for('browse', req_path=file.path) }}" target="_blank" class="btn btn-sm btn-primary me-1" title="Openen">
               <i class="bi bi-box-arrow-up-right"></i>
             </a>
             <a href="{{ url_for('download_file', path_file=file.path) }}" class="btn btn-sm btn-success" title="Downloaden" download>

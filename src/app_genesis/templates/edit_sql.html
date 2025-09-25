@@ -2,22 +2,27 @@
 {% block title %}SQL bewerken{% endblock %}
 
 {% block content %}
-<h2>SQL bewerken: {{ file_path }}</h2>
+<div class="d-flex justify-content-between mt-3">
+  <h2>SQL bewerken</h2>
+  <a href="#" onclick="close_window();return false;" class="btn btn-close" aria-label="Close">
+  </a>
+</div>
+<h5 class="mb-0"><i class="bi bi-filetype-sql me-2"></i><code>{{ file_path }}</code></h5>
 
-<form method="post" class="mt-3">
-    <textarea id="editor" name="content" rows="20" class="form-control">{{ content }}</textarea>
+  <form method="post" class="mt-3">
+      <textarea id="editor" name="content" rows="20" class="form-control">{{ content }}</textarea>
 
-    <div class="d-flex justify-content-between mt-3">
-        <!-- Gewoon opslaan -->
-        <button type="submit" name="action" value="save" class="btn btn-success">Opslaan</button>
+      <div class="d-flex justify-content-between mt-3">
+          <!-- Gewoon opslaan -->
+          <button type="submit" name="action" value="save" class="btn btn-success">Opslaan</button>
 
-        <!-- Opslaan als -->
-        <div class="input-group" style="max-width: 400px;">
-            <input type="text" name="new_name" class="form-control" placeholder="Nieuwe bestandsnaam">
-            <button type="submit" name="action" value="save_as" class="btn btn-warning">Opslaan als</button>
-        </div>
-    </div>
-</form>
+          <!-- Opslaan als -->
+          <div class="input-group" style="max-width: 400px;">
+              <input type="text" name="new_name" class="form-control" placeholder="Nieuwe bestandsnaam">
+              <button type="submit" name="action" value="save_as" class="btn btn-warning">Opslaan als</button>
+          </div>
+      </div>
+  </form>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -32,14 +37,15 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-        mode: "sql",
-        theme: "material-darker",
-        lineNumbers: true,
-        lineWrapping: true,  // Wrap long lines
-        styleActiveLine: true  // Markeer de actieve regel
-    });
-    editor.setSize("100%", "500px");
-</script>
+  <script>
+      const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+          mode: "sql",
+          theme: "material-darker",
+          lineNumbers: true,
+          lineWrapping: true,  // Wrap long lines
+          styleActiveLine: true  // Markeer de actieve regel
+      });
+      editor.setSize("100%", "500px");
+  </script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 {% endblock %}
