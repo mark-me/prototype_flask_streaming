@@ -281,7 +281,7 @@ def browse(req_path):
     file_list = [
         {
             "name": file_data["path"].name,
-            "path": str(file_data["path"].relative_to(ROOT_DIR)),
+            "path": str(file_data["path"].relative_to(ROOT_DIR)).replace("\\", "/"),
             "modifief": datetime.fromtimestamp(file_data["stat"].st_mtime),
             "created": datetime.fromtimestamp(file_data["stat"].st_ctime),
             "is_dir": file_data["path"].is_dir(),
@@ -289,7 +289,8 @@ def browse(req_path):
         for file_data in files_data
     ]
 
-    return render_template("browser.html", files=file_list, current_path=req_path)
+    req_path_formatted = str(req_path).replace("\\", "/")
+    return render_template("browser.html", files=file_list, current_path=req_path_formatted)
 
 
 @app.route("/open/html/<path:path_file>")
