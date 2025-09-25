@@ -32,7 +32,7 @@ evtSource.onmessage = function (event) {
         let lines = consoleBox.innerHTML.split("<br>");
         lines[lines.length - 1] = line;
         consoleBox.innerHTML = lines.join("<br>");
-    } else if (line !== "finished" && line !== "asking_question"){
+    } else if (line !== "finished" && line !== "asking_question") {
         // gewone nieuwe regel toevoegen
         consoleBox.innerHTML += "<br>" + line;
     }
@@ -55,8 +55,12 @@ function sendInput(value) {
     });
 }
 
-function close_window() {
-  if (confirm("Wil je deze tab afsluiten?\nWijzigingen worden niet opgeslagen.")) {
-    close();
-  }
+function close_window(warning = False) {
+    if (warning) {
+        if (confirm("Wil je deze tab afsluiten?\nWijzigingen worden niet opgeslagen.")) {
+            close();
+        }
+    } else {
+        close();
+    }
 }

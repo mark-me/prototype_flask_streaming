@@ -95,7 +95,7 @@ def config_edit(filename):
         action = request.form.get("action")
         content = request.form.get("content")
 
-        content = content.replace('\r\n', '\n')
+        content = content.replace("\r\n", "\n")
 
         if action == "save":
             with open(path_file, "w", encoding="utf-8") as f:
@@ -121,7 +121,13 @@ def config_edit(filename):
     with open(path_file, encoding="utf-8") as f:
         content = f.read()
 
-    return render_template("config_edit.html", filename=filename, content=content)
+    return render_template(
+        "file_editor.html",
+        filename=filename,
+        content=content,
+        file_type="yaml",
+        read_only=False,
+    )
 
 
 @app.route("/configs/new", methods=["GET", "POST"])
@@ -266,7 +272,7 @@ def browse(req_path):
         elif ext == ".json":
             return open_json(req_path)
         elif ext == ".sql":
-            return redirect(url_for("edit_sql", path_file=req_path))
+            return redirect(url_for("open_sql", path_file=req_path))
         elif ext == ".csv":
             return redirect(url_for("edit_csv", path_file=req_path))
         else:
@@ -292,7 +298,9 @@ def browse(req_path):
     ]
 
     req_path_formatted = str(req_path).replace("\\", "/")
-    return render_template("browser.html", files=file_list, current_path=req_path_formatted)
+    return render_template(
+        "browser.html", files=file_list, current_path=req_path_formatted
+    )
 
 
 @app.route("/open/html/<path:path_file>")
@@ -330,14 +338,14 @@ def open_json(path_file):
 
     # Lees de JSON-data
     with open(abs_path, encoding="utf-8") as f:
-        data = json.load(f)
+        content = json.load(f)
 
-    # Geef de data door aan de template
-    return render_template("view_json.html", data=data, path_file=path_file)
+    return jsonify(data=content, status=200, mimetype='application/json')
 
 
-@app.route("/edit/sql/<path:path_file>", methods=["GET", "POST"])
-def edit_sql(path_file):
+
+@app.route("/open/sql/<path:path_file>", methods=["GET", "POST"])
+def open_sql(path_file):
     """Biedt een interface om een SQL-bestand te bewerken en op te slaan.
 
     Deze functie verwerkt GET- en POST-verzoeken voor het bewerken en opslaan van een SQL-bestand.
@@ -358,7 +366,13 @@ def edit_sql(path_file):
         return redirect(url_for("browse", req_path=os.path.dirname(path_file)))
     with open(abs_path, encoding="utf-8") as f:
         content = f.read()
-    return render_template("edit_sql.html", content=content, file_path=path_file)
+    return render_template(
+        "file_editor.html",
+        filename=path_file,
+        content=content,
+        file_type="sql",
+        read_only=True,
+    )
 
 
 @app.route("/edit_csv/<path:path_file>")
