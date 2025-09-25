@@ -104,7 +104,8 @@ def config_edit(filename):
 
         elif action == "save_as":
             file_name_new = request.form.get("new_name").strip()
-            if not file_name_new.endswith(".yaml"):
+            # Ensure the file ends with either .yaml or .yml, default to .yaml if neither
+            if not (file_name_new.endswith(".yaml") or file_name_new.endswith(".yml")):
                 file_name_new += ".yaml"
 
             path_file_new = CONFIG_DIR / file_name_new
