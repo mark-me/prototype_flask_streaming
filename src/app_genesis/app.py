@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import shutil
@@ -376,20 +377,30 @@ def open_sql(path_file):
     )
 
 
-@app.route("/edit_csv/<path:path_file>")
+@app.route('/edit_csv/<path:path_file>', methods=['GET', 'POST'])
 def edit_csv(path_file):
-    """Biedt een interface om een CSV-bestand te bewerken.
+    # Zorg ervoor dat path_file absoluut pad is
+    csv_path = path_file
 
-    Deze functie rendert een HTML-pagina waarmee gebruikers het opgegeven CSV-bestand kunnen bekijken en bewerken.
+    # Check of het bestand bestaat
+    if not os.path.exists(csv_path):
+        return "Bestand niet gevonden", 404
 
-    Args:
-        path_file (str): Het pad naar het CSV-bestand dat bewerkt moet worden.
+    if request.method == 'GET':
+        # Lees de CSV en stuur naar de template
+        with open(csv_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            data = [row for row in reader]
 
-    Returns:
-        Response: Een HTML-pagina voor het bewerken van het CSV-bestand.
-    """
-    path_file = Path(path_file).resolve()
-    return render_template("edit_csv.html", path_file=path_file)
+        return render_template('edit_csv.html', path_file=path_file, data=data)
+
+    if request.method == 'POST':
+        # CSV opslaan
+        new_csv = request.json['csv']
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerows(new_csv.splitlines())  # Zorg ervoor dat CSV correct wordt opgeslagen
+        return jsonify({'status': 'success'})
 
 
 @app.route("/get_csv_data/<path:path_file>")
