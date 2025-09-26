@@ -32,6 +32,15 @@ class GenesisRunner:
         )
         threading.Thread(target=self._enqueue_output, daemon=True).start()
 
+    def stop(self):
+        """Stopt het actieve Genesis-proces indien aanwezig.
+
+        Deze methode beëindigt het proces en wacht tot het volledig is afgesloten.
+        """
+        if self.process:
+            self.process.terminate()
+            self.process.wait()
+
     def _enqueue_output(self):
         """Leest uitvoerregels van het Genesis-proces en plaatst deze in de uitvoerwachtrij.
 
