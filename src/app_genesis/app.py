@@ -1,4 +1,5 @@
 import csv
+import io
 import json
 import os
 import shutil
@@ -111,7 +112,7 @@ def config_edit(filename):
 
             path_file_new = CONFIG_DIR / file_name_new
 
-            if os.path.exists(path_file_new):
+            if path_file_new.exists():
                 flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
             else:
                 with open(path_file_new, "w", encoding="utf-8") as f:
@@ -156,13 +157,13 @@ def config_new():
         base_file = request.form["base_file"]
         new_name = request.form["new_name"].strip()
 
-        if not new_name.endswith(".yaml"):
+        if not new_name.endswith(".yaml") and not new_name.endswith(".yml"):
             new_name += ".yaml"
 
-        base_path = os.path.join(CONFIG_DIR, base_file)
-        new_path = os.path.join(CONFIG_DIR, new_name)
+        base_path = CONFIG_DIR / base_file
+        new_path = CONFIG_DIR / new_name
 
-        if os.path.exists(new_path):
+        if new_path.exists():
             flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
         else:
             shutil.copy(base_path, new_path)
@@ -268,7 +269,7 @@ def browse(req_path):
         return abort(404)
 
     if path_absolute.is_file():
-        ext = path_absolute.suffix
+        ext = path_absolute.suffix.lower()
         if ext == ".html":
             return open_html(req_path)
         elif ext == ".json":
@@ -342,7 +343,7 @@ def open_json(path_file):
     with open(abs_path, encoding="utf-8") as f:
         content = json.load(f)
 
-    return jsonify(data=content, status=200, mimetype='application/json')
+    return jsonify(data=content, status=200)
 
 
 
@@ -398,8 +399,9 @@ def edit_csv(path_file):
         # CSV opslaan
         new_csv = request.json['csv']
         with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(io.StringIO(new_csv))
             writer = csv.writer(csvfile)
-            writer.writerows(new_csv.splitlines())  # Zorg ervoor dat CSV correct wordt opgeslagen
+            writer.writerows(reader)  # Zorg ervoor dat CSV correct wordt opgeslagen
         return jsonify({'status': 'success'})
 
 
@@ -467,6 +469,9 @@ def about():
         Response: Een HTML-pagina met informatie over de applicatie.
     """
     about_md_path = Path(current_app.static_folder) / "about.md"
+    if not about_md_path.exists():
+        error_message = "<p>Het bestand <code>about.md</code> kon niet worden gevonden.</p>"
+        return render_template("about.html", content=error_message), 404
     with open(about_md_path, encoding="utf-8") as f:
         content = f.read()
     html = markdown.markdown(content, extensions=["fenced_code", "tables"])

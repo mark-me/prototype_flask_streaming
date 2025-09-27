@@ -9,10 +9,10 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.0.9/dist/js/tabulator.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.0.9/dist/css/tabulator.min.css" rel="stylesheet">
-
+<script src="{{ url_for('static', filename='js/papaparse.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tabulator/tabulator.min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tabulator.min.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tabulator_bootstrap5.min.css') }}" />
 <script>
   // Initialiseer Tabulator
   var table = new Tabulator("#csv-table", {
