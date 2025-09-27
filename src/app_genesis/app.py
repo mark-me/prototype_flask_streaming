@@ -1,28 +1,24 @@
-import csv
-import io
-import json
-import os
+
 import shutil
-from datetime import datetime
 from pathlib import Path
 
+
 import markdown
-from ansi2html import Ansi2HTMLConverter
+
 from flask import (
     Flask,
     Response,
-    abort,
     current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
     send_file,
-    send_from_directory,
     url_for,
 )
-from genesis_runner import GenesisRunner
+
+from routes import browser, runner
+
 
 from config import GenesisConfig
 from logtools import get_logger
@@ -30,19 +26,13 @@ from logtools import get_logger
 logger = get_logger(__name__)
 
 app = Flask(__name__)
+app.register_blueprint(browser)
+app.register_blueprint(runner)
 app.secret_key = "supersecret"
-runner = GenesisRunner()
+
 
 CONFIG_DIR = Path("configs").resolve()
 OUTPUT_DIR = Path("output").resolve()
-ROOT_DIR = Path(".").resolve()
-
-
-def secure_path(path):
-    full_path = ROOT_DIR / path
-    if ROOT_DIR not in full_path.parents:
-        abort(403)
-    return full_path
 
 
 @app.route("/")
@@ -54,6 +44,11 @@ def index() -> Response:
     Returns:
         Response: Een HTML-pagina met een lijst van configuratiebestanden.
     """
+    configs = get_configs()
+    # files_config = [path_config.name for path_config in paths_config]
+    return render_template("index.html", configs=configs)
+
+def get_configs() -> list[dict]:
     paths_config = sorted(
         [
             f
@@ -73,8 +68,7 @@ def index() -> Response:
         }
         for path_config in paths_config
     ]
-    # files_config = [path_config.name for path_config in paths_config]
-    return render_template("index.html", configs=configs)
+    return configs
 
 
 @app.route("/configs/edit/<filename>", methods=["GET", "POST"])
@@ -94,33 +88,68 @@ def config_edit(filename):
     path_file = CONFIG_DIR / filename
 
     if request.method == "POST":
-        action = request.form.get("action")
-        content = request.form.get("content")
+        return handle_config_edit_post(filename, path_file)
 
-        content = content.replace("\r\n", "\n")
+    return handle_config_edit_get(filename, path_file)
 
-        if action == "save":
-            with open(path_file, "w", encoding="utf-8") as f:
-                f.write(content)
-            flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
+def handle_config_edit_post(filename, path_file):
+    """Verwerkt het POST-verzoek voor het opslaan of opslaan als van een configuratiebestand.
 
-        elif action == "save_as":
-            file_name_new = request.form.get("new_name").strip()
-            # Ensure the file ends with either .yaml or .yml, default to .yaml if neither
-            if not (file_name_new.endswith(".yaml") or file_name_new.endswith(".yml")):
-                file_name_new += ".yaml"
+    Deze functie verwerkt de actie van de gebruiker (opslaan of opslaan als) en slaat het configuratiebestand op.
+    Bij 'save_as' wordt gecontroleerd of de nieuwe bestandsnaam al bestaat en wordt het bestand eventueel als nieuw opgeslagen.
 
-            path_file_new = CONFIG_DIR / file_name_new
+    Args:
+        filename (str): De naam van het huidige configuratiebestand.
+        path_file (Path): Het pad naar het huidige configuratiebestand.
 
-            if path_file_new.exists():
-                flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
-            else:
-                with open(path_file_new, "w", encoding="utf-8") as f:
-                    f.write(content)
-                flash(f"✅ Bestand opgeslagen als '{file_name_new}'.", "success")
-                return redirect(url_for("config_edit", filename=file_name_new))
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het configuratiebestand of een redirect na 'save as'.
+    """
+    action = request.form.get("action")
+    content = request.form.get("content")
+    content = content.replace("\r\n", "\n")
 
-    # bestand inladen
+    if action == "save":
+        _save_config_file(path_file, content)
+        flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
+
+    elif action == "save_as":
+        file_name_new = request.form.get("new_name").strip()
+        if not (file_name_new.endswith(".yaml") or file_name_new.endswith(".yml")):
+            file_name_new += ".yaml"
+
+        path_file_new = CONFIG_DIR / file_name_new
+
+        if path_file_new.exists():
+            flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
+        else:
+            _save_config_file(path_file_new, content)
+            flash(f"✅ Bestand opgeslagen als '{file_name_new}'.", "success")
+            return redirect(url_for("config_edit", filename=file_name_new))
+
+    with open(path_file, encoding="utf-8") as f:
+        content = f.read()
+
+    return render_template(
+        "file_editor.html",
+        filename=filename,
+        content=content,
+        file_type="yaml",
+        read_only=False,
+    )
+
+def _save_config_file(path: Path, content: str):
+    """Slaat de opgegeven inhoud op in het opgegeven configuratiebestand.
+
+    Args:
+        path (Path): Het pad naar het configuratiebestand.
+        content (str): De inhoud die moet worden opgeslagen.
+    """
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+def handle_config_edit_get(filename, path_file):
+    """Verwerkt het GET-verzoek voor het laden van een configuratiebestand in de editor."""
     with open(path_file, encoding="utf-8") as f:
         content = f.read()
 
@@ -145,7 +174,15 @@ def config_new():
     Returns:
         Response: Een HTML-pagina voor het aanmaken van een nieuwe configuratie.
     """
-    configs = sorted(
+    configs = get_sorted_config_names()
+
+    if request.method == "POST":
+        return handle_config_new_post(configs)
+    return render_template("config_new.html", configs=configs)
+
+def get_sorted_config_names():
+    """Geeft een gesorteerde lijst van configuratiebestandsnamen terug."""
+    return sorted(
         [
             f.name
             for f in CONFIG_DIR.iterdir()
@@ -153,306 +190,40 @@ def config_new():
         ]
     )
 
-    if request.method == "POST":
-        base_file = request.form["base_file"]
-        new_name = request.form["new_name"].strip()
+def handle_config_new_post(configs):
+    """Verwerkt het POST-verzoek voor het aanmaken van een nieuwe configuratie."""
+    base_file = request.form["base_file"]
+    new_name = request.form["new_name"].strip()
 
-        if not new_name.endswith(".yaml") and not new_name.endswith(".yml"):
-            new_name += ".yaml"
+    if not new_name.endswith(".yaml") and not new_name.endswith(".yml"):
+        new_name += ".yaml"
 
-        base_path = CONFIG_DIR / base_file
-        new_path = CONFIG_DIR / new_name
+    base_path = CONFIG_DIR / base_file
+    new_path = CONFIG_DIR / new_name
 
-        if new_path.exists():
-            flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
-        else:
-            shutil.copy(base_path, new_path)
-            flash(
-                f"✅ Nieuwe config '{new_name}' aangemaakt op basis van '{base_file}'",
-                "success",
-            )
-            return redirect(url_for("config_edit", filename=new_name))
-
+    if new_path.exists():
+        flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
+    else:
+        shutil.copy(base_path, new_path)
+        flash(
+            f"✅ Nieuwe config '{new_name}' aangemaakt op basis van '{base_file}'",
+            "success",
+        )
+        return redirect(url_for("config_edit", filename=new_name))
     return render_template("config_new.html", configs=configs)
 
 
-@app.route("/run/<filename>")
-def config_run(filename: str) -> Response:
-    """Start een GenesisRunner-proces met het opgegeven configuratiebestand en toont de uitvoerpagina.
-
-    Deze functie start het uitvoerproces voor de geselecteerde configuratie en rendert de bijbehorende pagina.
-
-    Args:
-        config (str): De naam van het configuratiebestand.
-
-    Returns:
-        Response: Een HTML-pagina die de uitvoer van het proces toont.
-    """
-    config_file_path = CONFIG_DIR / filename
-    if not config_file_path.exists():
-        error_message = f"Configuratiebestand '{filename}' niet gevonden."
-        return render_template("error.html", message=error_message), 404
-    try:
-        runner.start(config_path=config_file_path)
-    except Exception as e:
-        error_message = f"Fout bij het starten van de runner: {str(e)}"
-        return render_template("error.html", message=error_message), 500
-    return render_template("run.html", config=filename)
-
-
-@app.route("/stream")
-def stream() -> Response:
-    """Stuurt uitvoer van de GenesisRunner naar de client via Server-Sent Events (SSE).
-
-    Dit endpoint biedt real-time streaming van uitvoerregels, waarbij elke regel als een apart SSE-bericht wordt verzonden.
-    Als er een fout optreedt tijdens het streamen, wordt een foutmelding naar de client gestuurd.
-
-    Returns:
-        Response: Een Flask Response-object dat uitvoer streamt als text/event-stream.
-    """
-
-    def generate():
-        conv = Ansi2HTMLConverter(inline=True)
-        try:
-            for line in runner.stream_output():
-                html_line = conv.convert(line, full=False).rstrip()
-                yield f"data: {html_line}\n\n"
-                if "doorgaan" in html_line or "antwoorden" in html_line:
-                    yield "data: asking_question\n\n"
-                elif "Afgerond" in html_line:
-                    yield "data: finished\n\n"
-        except (BrokenPipeError, ConnectionResetError):
-            return
-        except Exception as e:
-            logger.exception("Exception occurred while streaming output")
-            yield "data: [ERROR] Er is een interne fout opgetreden tijdens het streamen.\n\n"
-
-    return Response(generate(), mimetype="text/event-stream")
-
-
-@app.route("/input", methods=["POST"])
-def send_input() -> dict:
-    """Ontvangt invoer van de client en stuurt deze door naar de GenesisRunner.
-
-    Deze functie verwerkt een POST-verzoek met invoerdata, valideert de invoer en stuurt deze naar het uitvoerproces.
-    Bij een fout wordt een passende foutmelding geretourneerd.
-
-    Returns:
-        dict: Een statusbericht in JSON-formaat, met een foutcode indien van toepassing.
-    """
-    value = request.json.get("value")
-    if value is None or not isinstance(value, str) or not value.strip():
-        return {"status": "error", "message": "Invalid or missing input value."}, 400
-    try:
-        runner.send_input(value)
-    except Exception as e:
-        return {"status": "error", "message": f"Failed to send input: {str(e)}"}, 500
-    return {"status": "ok"}
-
-
-@app.route("/browse/", defaults={"req_path": ""})
-@app.route("/browse/<path:req_path>")
-def browse(req_path):
-    """Biedt een bestandsbrowser waarmee gebruikers door mappen kunnen navigeren en bestanden kunnen openen of downloaden.
-
-    Deze functie verwerkt het opgegeven pad, toont de inhoud van mappen of stuurt bestanden naar de juiste viewers of als download naar de client.
-
-    Args:
-        req_path (str): Het relatieve pad naar de te bekijken map of het bestand.
-
-    Returns:
-        Response: Een HTML-pagina met de inhoud van de map, of een bestand als download of in de juiste viewer.
-    """
-    path_absolute = secure_path(req_path)
-
-    if not path_absolute.exists():
-        return abort(404)
-
-    if path_absolute.is_file():
-        ext = path_absolute.suffix.lower()
-        if ext == ".html":
-            return open_html(req_path)
-        elif ext == ".json":
-            return open_json(req_path)
-        elif ext == ".sql":
-            return redirect(url_for("open_sql", path_file=req_path))
-        elif ext == ".csv":
-            return redirect(url_for("edit_csv", path_file=req_path))
-        else:
-            return send_from_directory(
-                str(path_absolute.parent),
-                path_absolute.name,
-                as_attachment=True,
-            )
-
-    path_files = sorted(path_absolute.iterdir(), key=lambda p: (p.is_file(), p.name))
-    files_data = [
-        {"path": path_file, "stat": path_file.stat()} for path_file in path_files
-    ]
-    file_list = [
-        {
-            "name": file_data["path"].name,
-            "path": str(file_data["path"].relative_to(ROOT_DIR)).replace("\\", "/"),
-            "modified": datetime.fromtimestamp(file_data["stat"].st_mtime),
-            "created": datetime.fromtimestamp(file_data["stat"].st_ctime),
-            "is_dir": file_data["path"].is_dir(),
-        }
-        for file_data in files_data
-    ]
-
-    req_path_formatted = str(req_path).replace("\\", "/")
-    return render_template(
-        "browser.html", files=file_list, current_path=req_path_formatted
-    )
-
-
-@app.route("/open/html/<path:path_file>")
-def open_html(path_file):
-    """Opent een HTML-bestand en retourneert de inhoud als HTML-respons.
-
-    Deze functie leest het opgegeven HTML-bestand en stuurt de inhoud terug naar de client als een HTML-pagina.
-
-    Args:
-        path_file (str): Het pad naar het HTML-bestand dat geopend moet worden.
-
-    Returns:
-        Response: De inhoud van het HTML-bestand als een Flask Response-object met mimetype 'text/html'.
-    """
-    abs_path = secure_path(path_file)
-    with open(abs_path, encoding="utf-8") as f:
-        content = f.read()
-    #return render_template('html_view.html', content=content)
-    return Response(content, mimetype="text/html")
-
-
-@app.route("/open/json/<path:path_file>")
-def open_json(path_file):
-    """Opent een JSON-bestand en toont de inhoud in een HTML-template.
-
-    Deze functie leest het opgegeven JSON-bestand, formatteert de inhoud en rendert deze in een HTML-pagina.
-
-    Args:
-        path_file (str): Het pad naar het JSON-bestand dat geopend moet worden.
-
-    Returns:
-        Response: Een HTML-pagina met de geformatteerde JSON-inhoud.
-    """
-    # Beveilig het pad naar het JSON-bestand
-    abs_path = secure_path(path_file)
-
-    # Lees de JSON-data
-    with open(abs_path, encoding="utf-8") as f:
-        content = json.load(f)
-
-    return jsonify(data=content, status=200)
-
-
-
-@app.route("/open/sql/<path:path_file>", methods=["GET", "POST"])
-def open_sql(path_file):
-    """Biedt een interface om een SQL-bestand te bewerken en op te slaan.
-
-    Deze functie verwerkt GET- en POST-verzoeken voor het bewerken en opslaan van een SQL-bestand.
-    Bij een POST-verzoek wordt het bestand opgeslagen en wordt de gebruiker teruggeleid naar de bestandsbrowser.
-    Bij een GET-verzoek wordt de inhoud van het bestand geladen en weergegeven.
-
-    Args:
-        path_file (str): Het pad naar het SQL-bestand dat bewerkt moet worden.
-
-    Returns:
-        Response: Een HTML-pagina voor het bewerken van het SQL-bestand of een redirect na opslaan.
-    """
-    abs_path = secure_path(path_file)
-    if request.method == "POST":
-        content = request.form["content"]
-        with open(abs_path, "w", encoding="utf-8") as f:
-            f.write(content)
-        return redirect(url_for("browse", req_path=os.path.dirname(path_file)))
-    with open(abs_path, encoding="utf-8") as f:
-        content = f.read()
-    return render_template(
-        "file_editor.html",
-        filename=path_file,
-        content=content,
-        file_type="sql",
-        read_only=True,
-    )
-
-
-@app.route('/edit_csv/<path:path_file>', methods=['GET', 'POST'])
-def edit_csv(path_file):
-    # Zorg ervoor dat path_file absoluut pad is
-    csv_path = path_file
-
-    # Check of het bestand bestaat
-    if not os.path.exists(csv_path):
-        return "Bestand niet gevonden", 404
-
-    if request.method == 'GET':
-        # Lees de CSV en stuur naar de template
-        with open(csv_path, newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            data = [row for row in reader]
-
-        return render_template('edit_csv.html', path_file=path_file, data=data)
-
-    if request.method == 'POST':
-        # CSV opslaan
-        new_csv = request.json['csv']
-        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-            reader = csv.reader(io.StringIO(new_csv))
-            writer = csv.writer(csvfile)
-            writer.writerows(reader)  # Zorg ervoor dat CSV correct wordt opgeslagen
-        return jsonify({'status': 'success'})
-
-
-@app.route("/get_csv_data/<path:path_file>")
-def get_csv_data(path_file):
-    """Haalt de inhoud van een CSV-bestand op en retourneert deze als tekst.
-
-    Deze functie leest het opgegeven CSV-bestand en stuurt de inhoud terug naar de client.
-
-    Args:
-        path_file (str): Het pad naar het CSV-bestand dat opgehaald moet worden.
-
-    Returns:
-        str: De inhoud van het CSV-bestand als tekst.
-    """
-    path_file = Path(path_file).resolve()
-    with open(path_file, "r", encoding="utf-8") as f:
-        return f.read()
-
-
-@app.route("/save_csv_data/<path:path_file>", methods=["POST"])
-def save_csv_data(path_file):
-    """Slaat de ontvangen CSV-gegevens op in het opgegeven bestandspad.
-
-    Deze functie ontvangt CSV-data via een POST-verzoek en schrijft deze naar het opgegeven bestand.
-    Na het succesvol opslaan van de gegevens wordt een bevestiging in JSON-formaat geretourneerd.
-
-    Args:
-        path_file (str): Het pad naar het CSV-bestand waarin de gegevens moeten worden opgeslagen.
-
-    Returns:
-        Response: Een JSON-object met de status van de opslagoperatie.
-    """
-    data = request.get_json()
-    csv_data = data.get("csv", "")
-    path_file = Path(path_file).resolve()
-    with open(path_file, "w", encoding="utf-8") as f:
-        f.write(csv_data)
-    return jsonify({"status": "ok"})
-
-
 @app.route("/download-file/<path:path_file>")
-def download_file(path_file) -> Response:
-    """Maakt het mogelijk om een logbestand te downloaden als CSV-bestand.
+def download_file(path_file: str) -> Response:
+    """Biedt een bestand aan voor download aan de gebruiker.
 
-    Deze functie valideert de bestandsnaam, controleert of het logbestand bestaat en stuurt het bestand naar de client.
-    Bij een ongeldige bestandsnaam of ontbrekend bestand wordt een foutmelding geretourneerd.
+    Deze functie controleert of het opgegeven bestand bestaat en stuurt het als download naar de client. Als het bestand niet gevonden wordt, retourneert de functie een foutmelding.
+
+    Args:
+        path_file (str): Het pad naar het bestand dat gedownload moet worden.
 
     Returns:
-        Response: Het CSV-bestand als download, of een foutmelding als het bestand niet geldig of niet gevonden is.
+        Response: Het bestand als download of een foutmelding als het niet gevonden is.
     """
     path_file = Path(path_file).resolve()
     if path_file.exists():

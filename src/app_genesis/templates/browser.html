@@ -6,14 +6,14 @@
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('browse', req_path='') }}">Root</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('browser.browse', req_path='') }}">Root</a></li>
     {% if current_path %}
       {% set parts = current_path.split('/') %}
       {% for i in range(parts|length) %}
         {% set crumb_path = parts[:i+1]|join('/') %}
         <li class="breadcrumb-item {% if loop.last %}active{% endif %}" {% if loop.last %}aria-current="page"{% endif %}>
           {% if not loop.last %}
-            <a href="{{ url_for('browse', req_path=crumb_path) }}">{{ parts[i] }}</a>
+            <a href="{{ url_for('browser.browse', req_path=crumb_path) }}">{{ parts[i] }}</a>
           {% else %}
             {{ parts[i] }}
           {% endif %}
@@ -24,7 +24,7 @@
 </nav>
 
 {% if current_path %}
-  <a href="{{ url_for('browse', req_path=current_path.rsplit('/', 1)[0]) }}" class="btn btn-secondary mb-3">
+  <a href="{{ url_for('browser.browse', req_path=current_path.rsplit('/', 1)[0]) }}" class="btn btn-secondary mb-3">
     <i class="bi bi-arrow-left"></i> Terug
   </a>
 {% endif %}
@@ -45,7 +45,7 @@
         <td>
           {% if file.is_dir %}
             <i class="bi bi-folder-fill text-warning"></i>
-            <a href="{{ url_for('browse', req_path=file.path) }}">{{ file.name }}</a>
+            <a href="{{ url_for('browser.browse', req_path=file.path) }}">{{ file.name }}</a>
           {% else %}
             <i class="bi bi-file-earmark-text"></i>
             {{ file.name }}
@@ -56,7 +56,7 @@
         <td>{{ file.modified.strftime("%Y-%m-%d %H:%M") }}</td>
         <td>
           {% if not file.is_dir %}
-            <a href="{{ url_for('browse', req_path=file.path) }}" target="_blank" class="btn btn-sm btn-primary me-1" title="Openen">
+            <a href="{{ url_for('browser.browse', req_path=file.path) }}" target="_blank" class="btn btn-sm btn-primary me-1" title="Openen">
               <i class="bi bi-box-arrow-up-right"></i>
             </a>
             <a href="{{ url_for('download_file', path_file=file.path) }}" class="btn btn-sm btn-success" title="Downloaden" download>

@@ -89,18 +89,18 @@
                     <a href="{{ url_for('config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
                         <i class="bi bi-pencil"></i> Bewerken
                     </a>
-                    <a href="{{ url_for('config_run', filename=cfg.path_config) }}" class="btn btn-sm btn-success">
+                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}" class="btn btn-sm btn-success">
                         <div class="spinner-border spinner-border-sm text-light" role="status">
                             <span class="sr-only"></span>
                         </div>
                         <i class="bi bi-play"></i> Uitvoeren
                     </a>
                     {% if cfg.exists_output %}
-                        <a href="{{ url_for('browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
+                        <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
                             <i class="bi bi-search"></i> Resultaten
                         </a>
                     {% else %}
-                        <a href="{{ url_for('browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary disabled">
+                        <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary disabled">
                             <i class="bi bi-search"></i> Resultaten
                         </a>
                     {% endif %}
