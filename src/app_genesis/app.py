@@ -1,10 +1,7 @@
-
 import shutil
 from pathlib import Path
 
-
 import markdown
-
 from flask import (
     Flask,
     Response,
@@ -16,9 +13,7 @@ from flask import (
     send_file,
     url_for,
 )
-
 from routes import browser, runner
-
 
 from config import GenesisConfig
 from logtools import get_logger
@@ -47,6 +42,7 @@ def index() -> Response:
     configs = get_configs()
     # files_config = [path_config.name for path_config in paths_config]
     return render_template("index.html", configs=configs)
+
 
 def get_configs() -> list[dict]:
     paths_config = sorted(
@@ -91,6 +87,7 @@ def config_edit(filename):
         return handle_config_edit_post(filename, path_file)
 
     return handle_config_edit_get(filename, path_file)
+
 
 def handle_config_edit_post(filename, path_file):
     """Verwerkt het POST-verzoek voor het opslaan of opslaan als van een configuratiebestand.
@@ -138,6 +135,7 @@ def handle_config_edit_post(filename, path_file):
         read_only=False,
     )
 
+
 def _save_config_file(path: Path, content: str):
     """Slaat de opgegeven inhoud op in het opgegeven configuratiebestand.
 
@@ -147,6 +145,7 @@ def _save_config_file(path: Path, content: str):
     """
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
+
 
 def handle_config_edit_get(filename, path_file):
     """Verwerkt het GET-verzoek voor het laden van een configuratiebestand in de editor."""
@@ -180,6 +179,7 @@ def config_new():
         return handle_config_new_post(configs)
     return render_template("config_new.html", configs=configs)
 
+
 def get_sorted_config_names():
     """Geeft een gesorteerde lijst van configuratiebestandsnamen terug."""
     return sorted(
@@ -189,6 +189,7 @@ def get_sorted_config_names():
             if f.is_file() and f.suffix.lower() in [".yaml", ".yml"]
         ]
     )
+
 
 def handle_config_new_post(configs):
     """Verwerkt het POST-verzoek voor het aanmaken van een nieuwe configuratie."""
@@ -242,7 +243,9 @@ def about():
     """
     about_md_path = Path(current_app.static_folder) / "about.md"
     if not about_md_path.exists():
-        error_message = "<p>Het bestand <code>about.md</code> kon niet worden gevonden.</p>"
+        error_message = (
+            "<p>Het bestand <code>about.md</code> kon niet worden gevonden.</p>"
+        )
         return render_template("about.html", content=error_message), 404
     with open(about_md_path, encoding="utf-8") as f:
         content = f.read()
