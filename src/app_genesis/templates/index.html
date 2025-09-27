@@ -90,6 +90,9 @@
                         <i class="bi bi-pencil"></i> Bewerken
                     </a>
                     <a href="{{ url_for('config_run', filename=cfg.path_config) }}" class="btn btn-sm btn-success">
+                        <div class="spinner-border spinner-border-sm text-light" role="status">
+                            <span class="sr-only"></span>
+                        </div>
                         <i class="bi bi-play"></i> Uitvoeren
                     </a>
                     {% if cfg.exists_output %}
