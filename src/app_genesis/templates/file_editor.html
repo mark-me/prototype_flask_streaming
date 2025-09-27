@@ -43,6 +43,12 @@
 {% endblock %}
 
 {% block scripts %}
+  <script src="{{ url_for('static', filename='pkgs/codemirror/js/codemirror.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='pkgs/codemirror/js/mode/yaml.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='pkgs/codemirror/js/mode/sql.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='pkgs/codemirror/js/addon/foldcode.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='pkgs/codemirror/js/addon/foldgutter.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='pkgs/codemirror/js/addon/indent-fold.min.js') }}"></script>
   <script>
     // Verkrijg de file_type en read_only variabelen van Jinja2
     var fileType = "{{ file_type }}";  // 'yaml', 'json', 'sql', etc.
