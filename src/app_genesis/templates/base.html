@@ -12,11 +12,11 @@
       {% endblock %}
     </title>
     {% block head %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/material-darker.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap-icons.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/dataTables.bootstrap5.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/css/codemirror.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/css/material-darker.min.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 
     {% endblock %}
@@ -48,13 +48,13 @@
     </div>
 
     <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/codemirror/codemirror.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/codemirror/mode/yaml.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/codemirror/mode/sql.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/codemirror/addon/foldcode.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/codemirror/addon/foldgutter.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/codemirror/addon/indent-fold.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/js/codemirror.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/js/mode/yaml.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/js/mode/sql.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/js/addon/foldcode.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/js/addon/foldgutter.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/js/addon/indent-fold.min.js') }}"></script>
 
     {% block scripts %}
     {% endblock %}
