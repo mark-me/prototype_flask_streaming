@@ -321,6 +321,7 @@ def open_html(path_file):
     abs_path = secure_path(path_file)
     with open(abs_path, encoding="utf-8") as f:
         content = f.read()
+    #return render_template('html_view.html', content=content)
     return Response(content, mimetype="text/html")
 
 
