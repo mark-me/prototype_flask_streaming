@@ -1,5 +1,5 @@
 const consoleBox = document.getElementById("console");
-const evtSource = new EventSource("/stream");
+const evtSource = new EventSource("/runner/stream");
 
 // Functie om de knoppen aan te passen op basis van de status
 function updateUI(status) {
@@ -48,7 +48,7 @@ evtSource.onmessage = function (event) {
  *   value: The input value to be sent to the server.
  */
 function sendInput(value) {
-    fetch("/input", {
+    fetch("/runner/input", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: value })

@@ -21,8 +21,8 @@ from logtools import get_logger
 logger = get_logger(__name__)
 
 app = Flask(__name__)
-app.register_blueprint(browser)
-app.register_blueprint(runner)
+app.register_blueprint(browser, url_prefix="/browser")
+app.register_blueprint(runner, url_prefix="/runner")
 app.secret_key = "supersecret"
 
 
