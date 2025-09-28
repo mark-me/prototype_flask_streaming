@@ -2,11 +2,10 @@
 {% block title %}Bestandsbrowser{% endblock %}
 
 {% block content %}
-<h1 class="mt-4 mb-4">Genesis output Verkenner</h1>
+<h1 class="mt-4 mb-4">Genesis output verkenner</h1>
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('browser.browse', req_path='') }}">Root</a></li>
     {% if current_path %}
       {% set parts = current_path.split('/') %}
       {% for i in range(parts|length) %}
