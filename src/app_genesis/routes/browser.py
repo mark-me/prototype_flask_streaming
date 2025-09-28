@@ -1,4 +1,3 @@
-
 import csv
 import io
 import json
@@ -18,7 +17,8 @@ from flask import (
     url_for,
 )
 
-browser = Blueprint('browser', __name__)
+browser = Blueprint("browser", __name__)
+
 
 def secure_path(path):
     root = Path(".").resolve()
@@ -26,6 +26,7 @@ def secure_path(path):
     if root not in full_path.parents:
         abort(403)
     return full_path
+
 
 @browser.route("/browse/", defaults={"req_path": ""})
 @browser.route("/browse/<path:req_path>")
@@ -49,6 +50,7 @@ def browse(req_path):
         return handle_file_request(path_absolute, req_path)
 
     return render_directory_listing(path_absolute, req_path)
+
 
 def handle_file_request(path_absolute, req_path):
     """Handelt het openen of downloaden van een bestand af op basis van de extensie.
@@ -77,6 +79,7 @@ def handle_file_request(path_absolute, req_path):
             path_absolute.name,
             as_attachment=True,
         )
+
 
 def render_directory_listing(path_absolute, req_path):
     """Genereert een HTML-pagina met de inhoud van een directory.
@@ -127,7 +130,7 @@ def open_html(path_file):
     abs_path = secure_path(path_file)
     with open(abs_path, encoding="utf-8") as f:
         content = f.read()
-    #return render_template('html_view.html', content=content)
+    # return render_template('html_view.html', content=content)
     return Response(content, mimetype="text/html")
 
 
@@ -184,7 +187,7 @@ def open_sql(path_file):
     )
 
 
-@browser.route('/edit_csv/<path:path_file>', methods=['GET', 'POST'])
+@browser.route("/edit_csv/<path:path_file>", methods=["GET", "POST"])
 def edit_csv(path_file):
     """Biedt een interface om een CSV-bestand te bekijken en te bewerken.
 
@@ -202,11 +205,12 @@ def edit_csv(path_file):
     if not os.path.exists(path_file):
         return "Bestand niet gevonden", 404
 
-    if request.method == 'GET':
+    if request.method == "GET":
         return handle_edit_csv_get(path_file)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         return handle_edit_csv_post(path_file)
+
 
 def handle_edit_csv_get(path_file):
     """Leest de inhoud van een CSV-bestand en rendert deze in een HTML-template.
@@ -219,10 +223,11 @@ def handle_edit_csv_get(path_file):
     Returns:
         Response: Een HTML-pagina met de inhoud van het CSV-bestand.
     """
-    with open(path_file, newline='', encoding='utf-8') as csvfile:
+    with open(path_file, newline="", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         data = list(reader)
-    return render_template('browser/edit_csv.html', path_file=path_file, data=data)
+    return render_template("browser/edit_csv.html", path_file=path_file, data=data)
+
 
 def handle_edit_csv_post(csv_path):
     """Slaat nieuwe CSV-inhoud op in het opgegeven bestand.
@@ -235,12 +240,12 @@ def handle_edit_csv_post(csv_path):
     Returns:
         Response: Een JSON-object met de status van de opslagoperatie.
     """
-    new_csv = request.json['csv']
-    with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+    new_csv = request.json["csv"]
+    with open(csv_path, "w", newline="", encoding="utf-8") as csvfile:
         reader = csv.reader(io.StringIO(new_csv))
         writer = csv.writer(csvfile)
         writer.writerows(reader)
-    return jsonify({'status': 'success'})
+    return jsonify({"status": "success"})
 
 
 @browser.route("/get_csv_data/<path:path_file>")
@@ -260,8 +265,8 @@ def get_csv_data(path_file):
         return f.read()
 
 
-@browser.route("/save_csv_data/<path:path_file>", methods=["POST"])
-def save_csv_data(path_file):
+@browser.route("/download_csv/<path:path_file>", methods=["POST"])
+def download_csv(path_file: str):
     """Slaat de ontvangen CSV-gegevens op in het opgegeven bestandspad.
 
     Deze functie ontvangt CSV-data via een POST-verzoek en schrijft deze naar het opgegeven bestand.
@@ -273,9 +278,13 @@ def save_csv_data(path_file):
     Returns:
         Response: Een JSON-object met de status van de opslagoperatie.
     """
+    filename = Path(path_file).name
     data = request.get_json()
     csv_data = data.get("csv", "")
-    path_file = Path(path_file).resolve()
-    with open(path_file, "w", encoding="utf-8") as f:
-        f.write(csv_data)
-    return jsonify({"status": "ok"})
+
+    response = Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=" + filename},
+    )
+    return response

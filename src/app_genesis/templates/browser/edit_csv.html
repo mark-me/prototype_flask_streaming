@@ -9,7 +9,9 @@
   <a href="#" onclick="close_window(warning=false);return false;" class="btn btn-close" aria-label="Close"></a>
 </div>
 <div id="csv-table"></div>
-<button class="btn btn-success mt-3" onclick="downloadCSV()">Opslaan als CSV</button>
+<a href="{{ url_for('browser.download_csv', path_file=path_file) }}" class="btn btn-sm btn-success" download>
+    <i class="bi bi-download"></i> Downloaden CSV
+</a>
 {% endblock %}
 
 {% block scripts %}
@@ -44,20 +46,6 @@
       table.setData(parsed.data);
     });
 
-  // Opslaan als CSV
-  function downloadCSV() {
-    var data = table.getData();
-    var csv = Papa.unparse(data);
-
-    fetch("{{ url_for('browser.save_csv_data', path_file=path_file) }}", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ csv: csv })
-    }).then(response => {
-      if (response.ok) alert("CSV opgeslagen!");
-      else alert("Fout bij opslaan.");
-    });
-  }
 </script>
 <script src="{{ url_for('static', filename='js/close_window.js') }}"></script>
 {% endblock %}
