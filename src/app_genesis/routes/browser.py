@@ -108,7 +108,7 @@ def render_directory_listing(path_absolute, req_path):
 
     req_path_formatted = str(req_path).replace("\\", "/")
     return render_template(
-        "browser.html", files=file_list, current_path=req_path_formatted
+        "browser/browser.html", files=file_list, current_path=req_path_formatted
     )
 
 
@@ -222,7 +222,7 @@ def handle_edit_csv_get(path_file):
     with open(path_file, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         data = list(reader)
-    return render_template('edit_csv.html', path_file=path_file, data=data)
+    return render_template('browser/edit_csv.html', path_file=path_file, data=data)
 
 def handle_edit_csv_post(csv_path):
     """Slaat nieuwe CSV-inhoud op in het opgegeven bestand.
