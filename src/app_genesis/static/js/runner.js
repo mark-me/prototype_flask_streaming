@@ -9,16 +9,13 @@ function updateUI(status) {
     if (status === 'asking_question') {
         questionButtons.style.display = "block";   // Toon de vraag-knoppen
         downloadButton.style.display = "none";     // Verberg de download-knop
-        //console.log("Show question buttons");
     } else if (status === 'finished') {
         questionButtons.style.display = "none";    // Verberg de vraag-knoppen
         downloadButton.style.display = "block";    // Toon de download-knop
         evtSource.close();
-        //console.log("Done");
     } else {
         questionButtons.style.display = "none";  // Toon de vraag-knoppen
         downloadButton.style.display = "none";  // Toon de download-knop
-        //console.log("In progress");
     }
     console.log(status, questionButtons.style.display, downloadButton.style.display);
 }
@@ -53,14 +50,4 @@ function sendInput(value) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: value })
     });
-}
-
-function close_window(warning = False) {
-    if (warning) {
-        if (confirm("Wil je deze tab afsluiten?\nWijzigingen worden niet opgeslagen.")) {
-            close();
-        }
-    } else {
-        close();
-    }
 }

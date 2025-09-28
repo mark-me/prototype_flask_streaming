@@ -26,53 +26,51 @@
     <!-- Stappenplan -->
     <div class="row text-center mb-5">
         <div class="col-md-3">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="mb-3 text-secondary">
-                            <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
-                        </div>
-                        <h5 class="card-title">1. Kiezen</h5>
-                        <p class="card-text">Selecteer, bewerk of maak een configuratiebestand.</p>
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-3 text-secondary">
+                        <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
                     </div>
+                    <h5 class="card-title">1. Kiezen</h5>
+                    <p class="card-text">Selecteer, bewerk of maak een configuratiebestand.</p>
                 </div>
+            </div>
         </div>
 
         <div class="col-md-3">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="mb-3 text-warning">
-                            <i class="bi bi-pencil-square" style="font-size: 2rem;"></i>
-                        </div>
-                        <h5 class="card-title">2. Bewerken</h5>
-                        <p class="card-text">Open de ingebouwde editor om je configuratie direct aan te passen.</p>
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-3 text-warning">
+                        <i class="bi bi-pencil-square" style="font-size: 2rem;"></i>
                     </div>
+                    <h5 class="card-title">2. Bewerken</h5>
+                    <p class="card-text">Open de ingebouwde editor om je configuratie direct aan te passen.</p>
                 </div>
-
+            </div>
         </div>
 
         <div class="col-md-3">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="mb-3 text-success">
-                            <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
-                        </div>
-                        <h5 class="card-title">3. Uitvoeren</h5>
-                        <p class="card-text">Start Genesis en volg de voortgang live in de console-uitvoer.</p>
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-3 text-success">
+                        <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
                     </div>
+                    <h5 class="card-title">3. Uitvoeren</h5>
+                    <p class="card-text">Start Genesis en volg de voortgang live in de console-uitvoer.</p>
                 </div>
-
+            </div>
         </div>
 
         <div class="col-md-3">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body">
-                        <div class="mb-3 text-primary">
-                            <i class="bi bi-search" style="font-size: 2rem;"></i>
-                        </div>
-                        <h5 class="card-title">4. Verkennen</h5>
-                        <p class="card-text">Verken resultaten en aangetroffen issues in de modelbestanden.</p>
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-3 text-primary">
+                        <i class="bi bi-search" style="font-size: 2rem;"></i>
                     </div>
+                    <h5 class="card-title">4. Verkennen</h5>
+                    <p class="card-text">Verken resultaten en aangetroffen issues in de modelbestanden.</p>
                 </div>
+            </div>
         </div>
     </div>
 
@@ -82,19 +80,28 @@
             <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Beschikbare configuratiebestanden</h5>
         </div>
         <ul class="list-group list-group-flush">
-            {% for cfg in configs %}
+        {% for cfg in configs %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-file-earmark-text me-2 text-secondary"></i>{{ cfg.path_config }}</span>
                 <div>
                     <a href="{{ url_for('config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
                         <i class="bi bi-pencil"></i> Bewerken
                     </a>
-                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}" class="btn btn-sm btn-success">
-                        <div class="spinner-border spinner-border-sm text-light" role="status">
-                            <span class="sr-only"></span>
+
+                    <!-- "Uitvoeren" button with spinner -->
+                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}"
+                       class="btn btn-sm btn-success run-btn"
+                       id="run-btn-{{ loop.index }}"
+                       data-filename="{{ cfg.path_config }}">
+                        <div class="spinner-border spinner-border-sm text-light"
+                             role="status"
+                             id="spinner-{{ loop.index }}"
+                             style="display:none;">
+                            <span class="sr-only">Loading...</span>
                         </div>
-                        <i class="bi bi-play"></i> Uitvoeren
+                        <i class="bi bi-play" id="play-icon-{{ loop.index }}"></i> Uitvoeren
                     </a>
+
                     {% if cfg.exists_output %}
                         <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
                             <i class="bi bi-search"></i> Resultaten
@@ -106,9 +113,9 @@
                     {% endif %}
                 </div>
             </li>
-            {% else %}
+        {% else %}
             <li class="list-group-item text-muted">Geen configuratiebestanden gevonden.</li>
-            {% endfor %}
+        {% endfor %}
         </ul>
     </div>
 
@@ -118,4 +125,63 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateAllStatuses() {
+        fetch("{{ url_for('runner.status_all') }}")
+            .then(response => response.json())
+            .then(statuses => {
+                {% for cfg in configs %}
+                const runButton = document.getElementById('run-btn-{{ loop.index }}');
+                const spinner = document.getElementById('spinner-{{ loop.index }}');
+                const playIcon = document.getElementById('play-icon-{{ loop.index }}');
+
+                const status = statuses["{{ cfg.path_config }}"];
+                if (status === "running") {
+                    spinner.style.display = 'inline-block';
+                    playIcon.style.display = 'none';
+                    runButton.disabled = true;
+                } else {
+                    spinner.style.display = 'none';
+                    playIcon.style.display = 'inline-block';
+                    runButton.disabled = false;
+                }
+                {% endfor %}
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Voeg click event toe aan alle run-buttons
+        document.querySelectorAll('.run-btn').forEach(runButton => {
+            const spinner = runButton.querySelector('.spinner-border');
+            const playIcon = runButton.querySelector('.bi-play');
+
+            runButton.addEventListener('click', function(event) {
+                event.preventDefault();
+
+                spinner.style.display = 'inline-block';
+                playIcon.style.display = 'none';
+                runButton.disabled = true;
+
+                fetch(runButton.href)
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = runButton.href;
+                        } else {
+                            spinner.style.display = 'none';
+                            playIcon.style.display = 'inline-block';
+                            runButton.disabled = false;
+                            alert("Fout bij starten van Genesis");
+                        }
+                    });
+            });
+        });
+
+        // Initieel statussen ophalen en daarna elke 2 seconden vernieuwen
+        updateAllStatuses();
+        setInterval(updateAllStatuses, 2000);
+    });
+</script>
 {% endblock %}
