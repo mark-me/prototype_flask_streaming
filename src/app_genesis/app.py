@@ -107,7 +107,7 @@ def handle_config_edit_post(filename, path_file):
     content = content.replace("\r\n", "\n")
 
     if action == "save":
-        _save_config_file(path_file, content)
+        save_config_file(path_file, content)
         flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
 
     elif action == "save_as":
@@ -120,7 +120,7 @@ def handle_config_edit_post(filename, path_file):
         if path_file_new.exists():
             flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
         else:
-            _save_config_file(path_file_new, content)
+            save_config_file(path_file_new, content)
             flash(f"✅ Bestand opgeslagen als '{file_name_new}'.", "success")
             return redirect(url_for("config_edit", filename=file_name_new))
 
@@ -136,7 +136,7 @@ def handle_config_edit_post(filename, path_file):
     )
 
 
-def _save_config_file(path: Path, content: str):
+def save_config_file(path: Path, content: str):
     """Slaat de opgegeven inhoud op in het opgegeven configuratiebestand.
 
     Args:
