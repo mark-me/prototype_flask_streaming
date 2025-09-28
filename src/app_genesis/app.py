@@ -10,7 +10,6 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
     url_for,
 )
 from routes import browser, runner
@@ -45,6 +44,14 @@ def index() -> Response:
 
 
 def get_configs() -> list[dict]:
+    """Geeft een lijst van configuratiebestanden met hun outputdirectory en status.
+
+    Deze functie zoekt naar alle YAML-configuratiebestanden in de configuratiemap en retourneert
+    een lijst met hun namen, outputdirectory en of deze bestaat.
+
+    Returns:
+        list: Een lijst van dicts met informatie over de configuratiebestanden.
+    """
     paths_config = sorted(
         [
             f
@@ -89,7 +96,7 @@ def config_edit(filename):
     return handle_config_edit_get(filename, path_file)
 
 
-def handle_config_edit_post(filename, path_file):
+def handle_config_edit_post(filename: str, path_file: Path):
     """Verwerkt het POST-verzoek voor het opslaan of opslaan als van een configuratiebestand.
 
     Deze functie verwerkt de actie van de gebruiker (opslaan of opslaan als) en slaat het configuratiebestand op.
@@ -107,23 +114,72 @@ def handle_config_edit_post(filename, path_file):
     content = content.replace("\r\n", "\n")
 
     if action == "save":
-        save_config_file(path_file, content)
-        flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
+        return _handle_save(filename, path_file, content)
 
     elif action == "save_as":
-        file_name_new = request.form.get("new_name").strip()
-        if not (file_name_new.endswith(".yaml") or file_name_new.endswith(".yml")):
-            file_name_new += ".yaml"
+        return _handle_save_as(filename, content)
 
-        path_file_new = CONFIG_DIR / file_name_new
+    return _render_editor(filename, path_file)
 
-        if path_file_new.exists():
-            flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
-        else:
-            save_config_file(path_file_new, content)
-            flash(f"✅ Bestand opgeslagen als '{file_name_new}'.", "success")
-            return redirect(url_for("config_edit", filename=file_name_new))
 
+def _handle_save(filename: str, path_file: Path, content: str):
+    """Slaat het configuratiebestand op met de opgegeven inhoud.
+
+    Deze functie slaat de inhoud op in het bestaande configuratiebestand en toont een succesmelding.
+
+    Args:
+        filename (str): De naam van het configuratiebestand.
+        path_file (Path): Het pad naar het configuratiebestand.
+        content (str): De inhoud die moet worden opgeslagen.
+
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het configuratiebestand.
+    """
+    save_config_file(path_file, content)
+    flash(f"✅ Bestand '{filename}' opgeslagen.", "success")
+    return _render_editor(filename, path_file)
+
+
+def _handle_save_as(filename: str, content: str):
+    """Slaat de inhoud op als een nieuw configuratiebestand met een opgegeven naam.
+
+    Deze functie controleert of de nieuwe bestandsnaam al bestaat en slaat het bestand op als deze uniek is.
+    Bij een bestaande naam wordt een foutmelding getoond.
+
+    Args:
+        filename (str): De naam van het huidige configuratiebestand.
+        content (str): De inhoud die moet worden opgeslagen.
+
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het configuratiebestand of een redirect naar de editor.
+    """
+    file_name_new = request.form.get("new_name").strip()
+    if not (file_name_new.endswith(".yaml") or file_name_new.endswith(".yml")):
+        file_name_new += ".yaml"
+
+    path_file_new = CONFIG_DIR / file_name_new
+
+    if path_file_new.exists():
+        flash("❌ Bestand bestaat al, kies een andere naam.", "danger")
+        return _render_editor(filename, path_file_new)
+    else:
+        save_config_file(path_file_new, content)
+        flash(f"✅ Bestand opgeslagen als '{file_name_new}'.", "success")
+        return redirect(url_for("config_edit", filename=file_name_new))
+
+
+def _render_editor(filename: str, path_file: Path):
+    """Laadt de inhoud van een configuratiebestand en rendert de editorpagina.
+
+    Deze functie opent het opgegeven configuratiebestand en toont de editor met de huidige inhoud.
+
+    Args:
+        filename (str): De naam van het configuratiebestand.
+        path_file (Path): Het pad naar het configuratiebestand.
+
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het configuratiebestand.
+    """
     with open(path_file, encoding="utf-8") as f:
         content = f.read()
 
@@ -147,8 +203,18 @@ def save_config_file(path: Path, content: str):
         f.write(content)
 
 
-def handle_config_edit_get(filename, path_file):
-    """Verwerkt het GET-verzoek voor het laden van een configuratiebestand in de editor."""
+def handle_config_edit_get(filename: str, path_file: Path):
+    """Laadt de inhoud van een configuratiebestand en toont deze in de editor.
+
+    Deze functie opent het opgegeven configuratiebestand en rendert de editorpagina met de inhoud.
+
+    Args:
+        filename (str): De naam van het te bewerken configuratiebestand.
+        path_file (Path): Het pad naar het configuratiebestand.
+
+    Returns:
+        Response: Een HTML-pagina voor het bewerken van het configuratiebestand.
+    """
     with open(path_file, encoding="utf-8") as f:
         content = f.read()
 
@@ -181,7 +247,13 @@ def config_new():
 
 
 def get_sorted_config_names():
-    """Geeft een gesorteerde lijst van configuratiebestandsnamen terug."""
+    """Geeft een alfabetisch gesorteerde lijst van configuratiebestandsnamen terug.
+
+    Deze functie zoekt naar alle YAML-configuratiebestanden in de configuratiemap en retourneert hun namen gesorteerd.
+
+    Returns:
+        list: Een alfabetisch gesorteerde lijst van configuratiebestandsnamen.
+    """
     return sorted(
         [
             f.name
@@ -191,8 +263,18 @@ def get_sorted_config_names():
     )
 
 
-def handle_config_new_post(configs):
-    """Verwerkt het POST-verzoek voor het aanmaken van een nieuwe configuratie."""
+def handle_config_new_post(configs: list):
+    """Verwerkt het POST-verzoek voor het aanmaken van een nieuwe configuratie op basis van een bestaande.
+
+    Deze functie kopieert een bestaande configuratie naar een nieuw bestand met de opgegeven naam, mits deze nog niet bestaat.
+    Bij een bestaande naam wordt een foutmelding getoond.
+
+    Args:
+        configs (list): Een lijst van bestaande configuratiebestandsnamen.
+
+    Returns:
+        Response: Een HTML-pagina voor het aanmaken van een nieuwe configuratie of een redirect naar de editor.
+    """
     base_file = request.form["base_file"]
     new_name = request.form["new_name"].strip()
 
