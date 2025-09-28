@@ -20,9 +20,9 @@ from logtools import get_logger
 logger = get_logger(__name__)
 
 app = Flask(__name__)
+app.secret_key = "supersecret"
 app.register_blueprint(browser, url_prefix="/browser")
 app.register_blueprint(runner, url_prefix="/runner")
-app.secret_key = "supersecret"
 
 
 CONFIG_DIR = Path("configs").resolve()

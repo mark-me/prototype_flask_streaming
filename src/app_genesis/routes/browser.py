@@ -24,7 +24,9 @@ browser = Blueprint("browser", __name__)
 def secure_path(path):
     root = Path(".").resolve()
     full_path = root / path
-    if root not in full_path.parents:
+    try:
+        full_path.resolve().relative_to(root)
+    except:
         abort(403)
     return full_path
 
@@ -95,7 +97,7 @@ def render_directory_listing(path_absolute, req_path):
         Response: Een HTML-pagina met een lijst van bestanden en mappen in de directory.
     """
     path_root = Path(".").resolve()
-    path_files = sorted(path_absolute.iterdir(), key=lambda p: (p.is_file(), p.name))
+    path_files = sorted(path_absolute.iterdir(), key=lambda p: (not p.is_dir(), p.name))
     files_data = [
         {"path": path_file, "stat": path_file.stat()} for path_file in path_files
     ]
@@ -136,7 +138,7 @@ def download_file(path_file: str) -> Response:
 
 
 @browser.route("/open/html/<path:path_file>")
-def open_html(path_file):
+def open_html(path_file: str):
     """Opent een HTML-bestand en retourneert de inhoud als HTML-respons.
 
     Deze functie leest het opgegeven HTML-bestand en stuurt de inhoud terug naar de client als een HTML-pagina.
@@ -155,7 +157,7 @@ def open_html(path_file):
 
 
 @browser.route("/open/json/<path:path_file>")
-def open_json(path_file):
+def open_json(path_file: str):
     """Opent een JSON-bestand en toont de inhoud in een HTML-template.
 
     Deze functie leest het opgegeven JSON-bestand, formatteert de inhoud en rendert deze in een HTML-pagina.
@@ -173,11 +175,11 @@ def open_json(path_file):
     with open(abs_path, encoding="utf-8") as f:
         content = json.load(f)
 
-    return jsonify(data=content, status=200)
+    return jsonify(data=content)
 
 
 @browser.route("/open/sql/<path:path_file>", methods=["GET", "POST"])
-def open_sql(path_file):
+def open_sql(path_file: str):
     """Biedt een interface om een SQL-bestand te bewerken en op te slaan.
 
     Deze functie verwerkt GET- en POST-verzoeken voor het bewerken en opslaan van een SQL-bestand.
@@ -208,7 +210,7 @@ def open_sql(path_file):
 
 
 @browser.route("/edit_csv/<path:path_file>", methods=["GET", "POST"])
-def edit_csv(path_file):
+def edit_csv(path_file: str):
     """Biedt een interface om een CSV-bestand te bekijken en te bewerken.
 
     Deze functie verwerkt GET- en POST-verzoeken voor het bewerken van een CSV-bestand.
@@ -232,7 +234,7 @@ def edit_csv(path_file):
         return handle_edit_csv_post(path_file)
 
 
-def handle_edit_csv_get(path_file):
+def handle_edit_csv_get(path_file: str):
     """Leest de inhoud van een CSV-bestand en rendert deze in een HTML-template.
 
     Deze functie opent het opgegeven CSV-bestand, leest de rijen en stuurt deze naar de template voor bewerking.
@@ -260,7 +262,10 @@ def handle_edit_csv_post(csv_path):
     Returns:
         Response: Een JSON-object met de status van de opslagoperatie.
     """
-    new_csv = request.json["csv"]
+    data = request.get_json(silent=True)
+    if not data or "csv" not in data:
+        return jsonify({"status": "error", "message": "Ongeldige of ontbrekende JSON-data"}), 400
+    new_csv = data["csv"]
     with open(csv_path, "w", newline="", encoding="utf-8") as csvfile:
         reader = csv.reader(io.StringIO(new_csv))
         writer = csv.writer(csvfile)
@@ -269,7 +274,7 @@ def handle_edit_csv_post(csv_path):
 
 
 @browser.route("/get_csv_data/<path:path_file>")
-def get_csv_data(path_file):
+def get_csv_data(path_file: str):
     """Haalt de inhoud van een CSV-bestand op en retourneert deze als tekst.
 
     Deze functie leest het opgegeven CSV-bestand en stuurt de inhoud terug naar de client.
