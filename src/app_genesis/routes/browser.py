@@ -13,6 +13,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     send_from_directory,
     url_for,
 )
@@ -113,6 +114,25 @@ def render_directory_listing(path_absolute, req_path):
     return render_template(
         "browser/browser.html", files=file_list, current_path=req_path_formatted
     )
+
+
+
+@browser.route("/download-file/<path:path_file>")
+def download_file(path_file: str) -> Response:
+    """Biedt een bestand aan voor download aan de gebruiker.
+
+    Deze functie controleert of het opgegeven bestand bestaat en stuurt het als download naar de client. Als het bestand niet gevonden wordt, retourneert de functie een foutmelding.
+
+    Args:
+        path_file (str): Het pad naar het bestand dat gedownload moet worden.
+
+    Returns:
+        Response: Het bestand als download of een foutmelding als het niet gevonden is.
+    """
+    path_file = Path(path_file).resolve()
+    if path_file.exists():
+        return send_file(path_file, as_attachment=True)
+    return "Geen log gevonden", 404
 
 
 @browser.route("/open/html/<path:path_file>")

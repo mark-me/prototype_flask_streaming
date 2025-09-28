@@ -214,24 +214,6 @@ def handle_config_new_post(configs):
     return render_template("config_new.html", configs=configs)
 
 
-@app.route("/download-file/<path:path_file>")
-def download_file(path_file: str) -> Response:
-    """Biedt een bestand aan voor download aan de gebruiker.
-
-    Deze functie controleert of het opgegeven bestand bestaat en stuurt het als download naar de client. Als het bestand niet gevonden wordt, retourneert de functie een foutmelding.
-
-    Args:
-        path_file (str): Het pad naar het bestand dat gedownload moet worden.
-
-    Returns:
-        Response: Het bestand als download of een foutmelding als het niet gevonden is.
-    """
-    path_file = Path(path_file).resolve()
-    if path_file.exists():
-        return send_file(path_file, as_attachment=True)
-    return "Geen log gevonden", 404
-
-
 @app.route("/about")
 def about():
     """Toont de 'Over'-pagina met informatie uit het Markdown-bestand.
