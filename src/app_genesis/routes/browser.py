@@ -285,6 +285,6 @@ def download_csv(path_file: str):
     response = Response(
         csv_data,
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=" + filename},
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
     return response
