@@ -1,5 +1,5 @@
 const consoleBox = document.getElementById("console");
-const evtSource = new EventSource("/stream");
+const evtSource = new EventSource("/runner/stream");
 
 // Functie om de knoppen aan te passen op basis van de status
 function updateUI(status) {
@@ -9,16 +9,13 @@ function updateUI(status) {
     if (status === 'asking_question') {
         questionButtons.style.display = "block";   // Toon de vraag-knoppen
         downloadButton.style.display = "none";     // Verberg de download-knop
-        //console.log("Show question buttons");
     } else if (status === 'finished') {
         questionButtons.style.display = "none";    // Verberg de vraag-knoppen
         downloadButton.style.display = "block";    // Toon de download-knop
         evtSource.close();
-        //console.log("Done");
     } else {
         questionButtons.style.display = "none";  // Toon de vraag-knoppen
         downloadButton.style.display = "none";  // Toon de download-knop
-        //console.log("In progress");
     }
     console.log(status, questionButtons.style.display, downloadButton.style.display);
 }
@@ -48,19 +45,9 @@ evtSource.onmessage = function (event) {
  *   value: The input value to be sent to the server.
  */
 function sendInput(value) {
-    fetch("/input", {
+    fetch("/runner/input", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: value })
     });
-}
-
-function close_window(warning = False) {
-    if (warning) {
-        if (confirm("Wil je deze tab afsluiten?\nWijzigingen worden niet opgeslagen.")) {
-            close();
-        }
-    } else {
-        close();
-    }
 }

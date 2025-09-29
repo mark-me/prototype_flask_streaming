@@ -10,19 +10,21 @@ class GenesisRunner:
     Deze klasse start het Genesis-proces, verzamelt uitvoerregels, biedt streaming van uitvoer en accepteert invoer van de gebruiker.
     """
     def __init__(self):
-        self.process = None
-        self.queue_output = queue.Queue()
+        self._process = None
+        self._queue_output = queue.Queue()
+        self.path_config = None
 
-    def start(self, config_path: Path):
+    def start(self, path_config: Path):
         """Start een nieuw Genesis-proces met het opgegeven configuratiebestand.
 
         Deze methode initialiseert het proces en start een thread om de uitvoer te verzamelen.
 
         Args:
-            config_path (Path): Het pad naar het configuratiebestand.
+            path_config (Path): Het pad naar het configuratiebestand.
         """
-        self.process = subprocess.Popen(
-            [sys.executable, "src/genesis.py", config_path],
+        self.path_config = path_config
+        self._process = subprocess.Popen(
+            [sys.executable, "src/genesis.py", path_config],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -32,23 +34,26 @@ class GenesisRunner:
         )
         threading.Thread(target=self._enqueue_output, daemon=True).start()
 
+    def is_running(self) -> bool:
+        return False if self._process is None else self._process.poll() is None
+
     def stop(self):
         """Stopt het actieve Genesis-proces indien aanwezig.
 
         Deze methode beëindigt het proces en wacht tot het volledig is afgesloten.
         """
-        if self.process:
-            self.process.terminate()
-            self.process.wait()
+        if self._process:
+            self._process.terminate()
+            self._process.wait()
 
     def _enqueue_output(self):
         """Leest uitvoerregels van het Genesis-proces en plaatst deze in de uitvoerwachtrij.
 
         Deze methode wordt uitgevoerd in een aparte thread en zorgt ervoor dat alle uitvoer beschikbaar is voor streaming.
         """
-        for line in self.process.stdout:
-            self.queue_output.put(line) #.strip())
-        self.process.stdout.close()
+        for line in self._process.stdout:
+            self._queue_output.put(line) #.strip())
+        self._process.stdout.close()
 
     def stream_output(self):
         """Genereert uitvoerregels van het Genesis-proces voor streaming naar de client.
@@ -60,10 +65,9 @@ class GenesisRunner:
         """
         while True:
             try:
-                line = self.queue_output.get(timeout=0.5)
-                yield line
+                yield self._queue_output.get(timeout=0.5)
             except queue.Empty:
-                if self.process.poll() is not None:
+                if self._process.poll() is not None:
                     break
 
     def send_input(self, text: str):
@@ -74,6 +78,6 @@ class GenesisRunner:
         Args:
             text (str): De tekst die naar het Genesis-proces gestuurd moet worden.
         """
-        if self.process and self.process.stdin:
-            self.process.stdin.write(text + "\n")
-            self.process.stdin.flush()
+        if self._process and self._process.stdin:
+            self._process.stdin.write(text + "\n")
+            self._process.stdin.flush()

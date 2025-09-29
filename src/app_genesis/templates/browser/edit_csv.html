@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}CSV Editor{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mt-3">
+
+  <h2>CSV bewerken</h2>
+  <a href="#" onclick="close_window(warning=false);return false;" class="btn btn-close" aria-label="Close"></a>
+</div>
+<div id="csv-table"></div>
+<a href="{{ url_for('browser.download_csv', path_file=path_file) }}" class="btn btn-sm btn-success" download>
+    <i class="bi bi-download"></i> Downloaden CSV
+</a>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='pkgs/paparse/js/papaparse.min.js') }}"></script>
+<script src="{{ url_for('static', filename='pkgs/tabulator/js/tabulator.min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='pkgs/tabulator/css/tabulator.min.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='pkgs/tabulator/css/tabulator_bootstrap5.min.css') }}" />
+<script>
+  // Initialiseer Tabulator
+  var table = new Tabulator("#csv-table", {
+    layout: "fitDataStretch",
+    movableColumns: true,
+    height: "500px",
+    columns: [],
+    data: [],
+  });
+
+  // Haal CSV op via endpoint
+  fetch("{{ url_for('browser.get_csv_data', path_file=path_file) }}")
+    .then(response => response.text())
+    .then(csvText => {
+      var parsed = Papa.parse(csvText, { header: true });
+
+      // Zet de kolommen in Tabulator
+      table.setColumns(parsed.meta.fields.map(field => ({
+        title: field,
+        field: field,
+        editor: "input"
+      })));
+
+      // Zet de data in Tabulator
+      table.setData(parsed.data);
+    });
+
+</script>
+<script src="{{ url_for('static', filename='js/close_window.js') }}"></script>
+{% endblock %}

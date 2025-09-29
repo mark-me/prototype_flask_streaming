@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Bestandsbrowser{% endblock %}
+
+{% block content %}
+
+<h1 class="mt-4 mb-4">Genesis output verkenner</h1>
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    {% if current_path %}
+      {% set parts = current_path.split('/') %}
+      {% for i in range(parts|length) %}
+        {% set crumb_path = parts[:i+1]|join('/') %}
+        <li class="breadcrumb-item {% if loop.last %}active{% endif %}" {% if loop.last %}aria-current="page"{% endif %}>
+          {% if not loop.last %}
+            <a href="{{ url_for('browser.browse', req_path=crumb_path) }}">{{ parts[i] }}</a>
+          {% else %}
+            {{ parts[i] }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    {% endif %}
+  </ol>
+</nav>
+
+{% if current_path %} <a href="{{ url_for('browser.browse', req_path=current_path.rsplit('/', 1)[0]) }}" class="btn btn-secondary mb-3"> <i class="bi bi-arrow-left"></i> Terug </a>
+{% endif %}
+
+<table id="fileTable" class="table table-hover align-middle">
+  <thead class="table-light">
+    <tr>
+      <th data-sort="string">Naam <span class="sort-indicator"></span></th>
+      <th>Acties</th>
+      <th data-sort="string">Type <span class="sort-indicator"></span></th>
+      <th data-sort="date">Gecreëerd <span class="sort-indicator"></span></th>
+      <th data-sort="date">Aangepast <span class="sort-indicator"></span></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for file in files %}
+      <tr>
+        <td>
+          {% if file.is_dir %}
+            <i class="bi bi-folder-fill text-warning"></i>
+            <a href="{{ url_for('browser.browse', req_path=file.path) }}">{{ file.name }}</a>
+          {% else %}
+            <i class="bi bi-file-earmark-text"></i>
+            {{ file.name }}
+          {% endif %}
+        </td>
+        <td>
+          {% if not file.is_dir %}
+            <a href="{{ url_for('browser.browse', req_path=file.path) }}" target="_blank" class="btn btn-sm btn-primary me-1" title="Openen">
+              <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            <a href="{{ url_for('browser.download_file', path_file=file.path) }}" class="btn btn-sm btn-success" title="Downloaden" download>
+              <i class="bi bi-download"></i>
+            </a>
+          {% endif %}
+        </td>
+        <td>{{ "Map" if file.is_dir else "Bestand" }}</td>
+        <td>{{ file.created.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ file.modified.strftime("%Y-%m-%d %H:%M") }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const table = document.getElementById("fileTable");
+  const headers = table.querySelectorAll("th[data-sort]");
+  let currentSort = { index: null, dir: 1 };
+
+  headers.forEach((header, index) => {
+    header.style.cursor = "pointer";
+    header.addEventListener("click", () => {
+      const type = header.getAttribute("data-sort");
+      const rows = Array.from(table.tBodies[0].rows);
+
+      // Toggle sort direction
+      if (currentSort.index === index) {
+        currentSort.dir *= -1;
+      } else {
+        currentSort.index = index;
+        currentSort.dir = 1;
+      }
+
+      // Sort rows
+      rows.sort((a, b) => {
+        let valA = a.cells[index].innerText.trim();
+        let valB = b.cells[index].innerText.trim();
+
+        if (type === "date") {
+          valA = new Date(valA.replace(" ", "T"));
+          valB = new Date(valB.replace(" ", "T"));
+        } else {
+          valA = valA.toLowerCase();
+          valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return -1 * currentSort.dir;
+        if (valA > valB) return 1 * currentSort.dir;
+        return 0;
+      });
+
+      rows.forEach(row => table.tBodies[0].appendChild(row));
+
+      // Reset indicators
+      headers.forEach(h => h.querySelector(".sort-indicator").innerHTML = "");
+      header.querySelector(".sort-indicator").innerHTML =
+        currentSort.dir === 1 ? "▲" : "▼";
+    });
+  });
+});
+</script>
+
+{% endblock %}
