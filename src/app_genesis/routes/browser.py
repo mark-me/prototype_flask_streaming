@@ -104,6 +104,7 @@ def render_directory_listing(path_absolute, req_path):
     file_list = [
         {
             "name": file_data["path"].name,
+            "ext": file_data["path"].suffix.lower().replace(".", ""),
             "path": str(file_data["path"].relative_to(path_root)).replace("\\", "/"),
             "modified": datetime.fromtimestamp(file_data["stat"].st_mtime),
             "created": datetime.fromtimestamp(file_data["stat"].st_ctime),
