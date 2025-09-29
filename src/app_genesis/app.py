@@ -74,7 +74,8 @@ def get_configs() -> list[dict]:
             "exists_output": GenesisConfig(
                 file_config=path_config, create_version_dir=False
             ).path_intermediate_root.exists(),
-            "modified_date": path_config.stat().st_mtime,
+            "created": datetime.fromtimestamp(path_config.stat().st_ctime),
+            "modified": datetime.fromtimestamp(path_config.stat().st_mtime),
         }
         for path_config in paths_config
     ]
