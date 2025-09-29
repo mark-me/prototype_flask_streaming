@@ -1,4 +1,5 @@
 import shutil
+from datetime import datetime
 from pathlib import Path
 
 import markdown
@@ -29,7 +30,7 @@ CONFIG_DIR = Path("configs").resolve()
 OUTPUT_DIR = Path("output").resolve()
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index() -> Response:
     """Toont de startpagina met een lijst van beschikbare configuratiebestanden.
 
@@ -38,27 +39,32 @@ def index() -> Response:
     Returns:
         Response: Een HTML-pagina met een lijst van configuratiebestanden.
     """
+    sort_by = request.args.get('sort_by', 'name')  # 'name' is standaard
     configs = get_configs()
-    # files_config = [path_config.name for path_config in paths_config]
-    return render_template("index.html", configs=configs)
+    return render_template("index.html", configs=configs, sort_by=sort_by)
 
 
 def get_configs() -> list[dict]:
-    """Geeft een lijst van configuratiebestanden met hun outputdirectory en status.
+    """Geeft een lijst van configuratiebestanden met bijbehorende metadata terug.
 
-    Deze functie zoekt naar alle YAML-configuratiebestanden in de configuratiemap en retourneert
-    een lijst met hun namen, outputdirectory en of deze bestaat.
+    Deze functie verzamelt alle YAML-configuratiebestanden in de configuratiemap en retourneert hun naam, outputdirectory, of de output bestaat en de wijzigingsdatum.
 
     Returns:
-        list: Een lijst van dicts met informatie over de configuratiebestanden.
+        list[dict]: Een lijst van dictionaries met informatie over elk configuratiebestand.
     """
+    sort_by = request.args.get('sort_by', 'name')  # Sorteren op naam of datum
+    order = request.args.get('order', 'asc')  # Oplopend of aflopend
+
     paths_config = sorted(
         [
             f
             for f in CONFIG_DIR.iterdir()
             if f.is_file() and f.suffix.lower() in [".yaml", ".yml"]
-        ]
+        ],
+        key=lambda x: x.name if sort_by == 'name' else x.stat().st_mtime,
+        reverse=(order == 'desc')
     )
+
     configs = [
         {
             "path_config": path_config.name,
@@ -68,10 +74,23 @@ def get_configs() -> list[dict]:
             "exists_output": GenesisConfig(
                 file_config=path_config, create_version_dir=False
             ).path_intermediate_root.exists(),
+            "modified_date": path_config.stat().st_mtime,
         }
         for path_config in paths_config
     ]
     return configs
+
+
+@app.route("/configs/delete/<filename>", methods=["POST"])
+def config_delete(filename: str):
+    """Verwijdert het geselecteerde configuratiebestand."""
+    path_file = CONFIG_DIR / filename
+    if path_file.exists():
+        path_file.unlink()  # Verwijder het bestand
+        flash(f"✅ Configuratiebestand '{filename}' is verwijderd.", "success")
+    else:
+        flash(f"❌ Configuratiebestand '{filename}' niet gevonden.", "danger")
+    return redirect(url_for("index"))
 
 
 @app.route("/configs/edit/<filename>", methods=["GET", "POST"])
@@ -262,6 +281,10 @@ def get_sorted_config_names():
         ]
     )
 
+@app.template_filter('datetimeformat')
+def datetimeformat(value):
+    """Formateer de datum naar een leesbaar formaat."""
+    return datetime.utcfromtimestamp(value).strftime('%Y-%m-%d %H:%M:%S')
 
 def handle_config_new_post(configs: list):
     """Verwerkt het POST-verzoek voor het aanmaken van een nieuwe configuratie op basis van een bestaande.
