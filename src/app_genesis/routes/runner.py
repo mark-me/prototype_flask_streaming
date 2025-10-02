@@ -16,12 +16,6 @@ CONFIG_DIR = Path("configs").resolve()
 OUTPUT_DIR = Path("output").resolve()
 config_registry = ConfigRegistry()
 
-#genesis_runner = GenesisRunner()
-
-# Centrale in-memory status store
-# voorbeeld: {"config1.yaml": "running", "config2.yaml": "finished"}
-
-
 @runner.route("/run/<filename>")
 def config_run(filename: str) -> Response:
     """Start een GenesisRunner-proces voor een opgegeven configuratiebestand."""
