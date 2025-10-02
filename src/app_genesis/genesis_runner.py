@@ -4,11 +4,13 @@ import queue
 import sys
 from pathlib import Path
 
+
 class GenesisRunner:
     """Beheert het uitvoeren van een Genesis-proces en de communicatie met invoer en uitvoer.
 
     Deze klasse start het Genesis-proces, verzamelt uitvoerregels, biedt streaming van uitvoer en accepteert invoer van de gebruiker.
     """
+
     def __init__(self, path_config: Path):
         self._process = None
         self._queue_output = queue.Queue()
@@ -29,7 +31,7 @@ class GenesisRunner:
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
-            encoding="utf8"
+            encoding="utf8",
         )
         threading.Thread(target=self._enqueue_output, daemon=True).start()
 

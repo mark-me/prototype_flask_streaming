@@ -62,6 +62,9 @@ class ConfigRegistry:
             }
         return result
 
+    def get(self, filename: str) -> dict:
+        return self.configs.get(filename)
+
     def add(self, file_config: str) -> None:
         """Voegt een nieuw configuratiebestand toe aan het register als het bestaat.
 

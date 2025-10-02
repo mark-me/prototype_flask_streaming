@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="mt-4">
-    <!-- Introductie -->
+        <!-- Introductie -->
     <div class="row align-items-center mb-5">
         <!-- Logo links -->
         <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
@@ -85,12 +85,13 @@
             <th data-sort="string">Naam <span class="sort-indicator"></span></th>
             <th data-sort="date">Gecreëerd <span class="sort-indicator"></span></th>
             <th data-sort="date">Aangepast <span class="sort-indicator"></span></th>
+            <th>Status</th>
             <th>Acties</th>
             </tr>
         </thead>
         <tbody>
             {% for cfg in configs %}
-            <tr>
+            <tr id="row-{{ loop.index }}">
                 <td>
                 <i class="bi bi-filetype-yml"></i> {{ cfg.path_config }}
                 </td>
@@ -109,13 +110,15 @@
                     {% endif %}
                 </td>
                 <td>
+                    <span id="status-{{ loop.index }}" class="badge {% if cfg.status == 'running' %}bg-warning{% elif cfg.status == 'finished' %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ cfg.status | capitalize }}
+                    </span>
+                </td>
+                <td>
                     <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
                         <i class="bi bi-pencil"></i> Bewerken
                     </a>
-
-                    <!-- "Uitvoeren" button with spinner -->
-                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}" target="_blank"
-                    class="btn btn-sm btn-success run-btn
+                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-success run-btn
                             {% if cfg.status == 'running' %} disabled{% endif %}"
                     id="run-btn-{{ loop.index }}"
                     data-filename="{{ cfg.path_config }}">
@@ -129,8 +132,7 @@
                         <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
                         Uitvoeren
                     </a>
-
-                    {% if cfg.exists_output %}
+                   {% if cfg.exists_output %}
                         <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
                             <i class="bi bi-search"></i> Resultaten
                         </a>
@@ -142,25 +144,6 @@
                     <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
                         <i class="bi bi-trash"></i>
                     </button>
-                    <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel">Bevestig Verwijdering</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Weet je zeker dat je het configuratiebestand <strong>{{ cfg.path_config }}</strong> wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
-                                </div>
-                                <div class="modal-footer">
-                                    <form action="{{ url_for('config_handler.config_delete', filename=cfg.path_config) }}" method="POST">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
-                                        <button type="submit" class="btn btn-danger">Verwijderen</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -225,7 +208,7 @@
     document.getElementById('answerNo').addEventListener('click', () => sendAnswer("N"));
 
     document.addEventListener("DOMContentLoaded", function() {
-        const eventSource = new EventSource("{{ url_for('runner.stream') }}");
+        const eventSource = new EventSource("{{ url_for('runner.stream', filename='') }}");
 
         eventSource.onmessage = function(event) {
             if (event.data.startsWith("waiting_input")) {
@@ -239,53 +222,26 @@
             }
         };
     });
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-    const table = document.getElementById("fileTable");
-    const headers = table.querySelectorAll("th[data-sort]");
-    let currentSort = { index: null, dir: 1 };
 
-    headers.forEach((header, index) => {
-        header.style.cursor = "pointer";
-        header.addEventListener("click", () => {
-        const type = header.getAttribute("data-sort");
-        const rows = Array.from(table.tBodies[0].rows);
-
-        // Toggle sort direction
-        if (currentSort.index === index) {
-            currentSort.dir *= -1;
+    // Functie om de status van de configuraties bij te werken
+    function updateAllStatuses() {
+        {% for cfg in configs %}
+        const statusElement = document.getElementById("status-{{ loop.index }}");
+        const status = "{{ cfg.status }}";
+        if (status === 'running') {
+            statusElement.classList.remove("bg-secondary", "bg-success");
+            statusElement.classList.add("bg-warning");
+            statusElement.textContent = "Running";
+        } else if (status === 'finished') {
+            statusElement.classList.remove("bg-secondary", "bg-warning");
+            statusElement.classList.add("bg-success");
+            statusElement.textContent = "Finished";
         } else {
-            currentSort.index = index;
-            currentSort.dir = 1;
+            statusElement.classList.remove("bg-warning", "bg-success");
+            statusElement.classList.add("bg-secondary");
+            statusElement.textContent = "Idle";
         }
-
-        // Sort rows
-        rows.sort((a, b) => {
-            let valA = a.cells[index].innerText.trim();
-            let valB = b.cells[index].innerText.trim();
-
-            if (type === "date") {
-            valA = new Date(valA.replace(" ", "T"));
-            valB = new Date(valB.replace(" ", "T"));
-            } else {
-            valA = valA.toLowerCase();
-            valB = valB.toLowerCase();
-            }
-
-            if (valA < valB) return -1 * currentSort.dir;
-            if (valA > valB) return 1 * currentSort.dir;
-            return 0;
-        });
-
-        rows.forEach(row => table.tBodies[0].appendChild(row));
-
-        // Reset indicators
-        headers.forEach(h => h.querySelector(".sort-indicator").innerHTML = "");
-        header.querySelector(".sort-indicator").innerHTML =
-            currentSort.dir === 1 ? "▲" : "▼";
-        });
-    });
-    });
+        {% endfor %}
+    }
 </script>
 {% endblock %}
