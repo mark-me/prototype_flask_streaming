@@ -9,12 +9,12 @@ class GenesisRunner:
 
     Deze klasse start het Genesis-proces, verzamelt uitvoerregels, biedt streaming van uitvoer en accepteert invoer van de gebruiker.
     """
-    def __init__(self):
+    def __init__(self, path_config: Path):
         self._process = None
         self._queue_output = queue.Queue()
-        self.path_config = None
+        self.path_config = path_config
 
-    def start(self, path_config: Path):
+    def start(self):
         """Start een nieuw Genesis-proces met het opgegeven configuratiebestand.
 
         Deze methode initialiseert het proces en start een thread om de uitvoer te verzamelen.
@@ -22,9 +22,8 @@ class GenesisRunner:
         Args:
             path_config (Path): Het pad naar het configuratiebestand.
         """
-        self.path_config = path_config
         self._process = subprocess.Popen(
-            [sys.executable, "src/genesis.py", path_config],
+            [sys.executable, "src/genesis.py", self.path_config],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -35,7 +34,14 @@ class GenesisRunner:
         threading.Thread(target=self._enqueue_output, daemon=True).start()
 
     def is_running(self) -> bool:
-        return False if self._process is None else self._process.poll() is None
+        """Controleert of het Genesis-proces momenteel actief is.
+
+        Geeft True terug als het proces draait, anders False.
+
+        Returns:
+            bool: True als het proces actief is, anders False.
+        """
+        return self._process is not None and self._process.poll() is None
 
     def stop(self):
         """Stopt het actieve Genesis-proces indien aanwezig.
@@ -52,7 +58,7 @@ class GenesisRunner:
         Deze methode wordt uitgevoerd in een aparte thread en zorgt ervoor dat alle uitvoer beschikbaar is voor streaming.
         """
         for line in self._process.stdout:
-            self._queue_output.put(line) #.strip())
+            self._queue_output.put(line)
         self._process.stdout.close()
 
     def stream_output(self):

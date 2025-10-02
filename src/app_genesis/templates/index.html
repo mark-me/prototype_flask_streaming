@@ -94,25 +94,40 @@
                 <td>
                 <i class="bi bi-filetype-yml"></i> {{ cfg.path_config }}
                 </td>
-                <td>{{ cfg.created.strftime("%Y-%m-%d %H:%M") }}</td>
-                <td>{{ cfg.modified.strftime("%Y-%m-%d %H:%M") }}</td>
                 <td>
-                    <a href="{{ url_for('config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
+                    {% if cfg.created %}
+                        {{ cfg.created.strftime("%Y-%m-%d %H:%M") }}
+                    {% else %}
+                        <span class="text-muted">Onbekend</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if cfg.modified %}
+                        {{ cfg.modified.strftime("%Y-%m-%d %H:%M") }}
+                    {% else %}
+                        <span class="text-muted">Onbekend</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
                         <i class="bi bi-pencil"></i> Bewerken
                     </a>
 
                     <!-- "Uitvoeren" button with spinner -->
-                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}"
-                       class="btn btn-sm btn-success run-btn"
-                       id="run-btn-{{ loop.index }}"
-                       data-filename="{{ cfg.path_config }}">
+                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}" target="_blank"
+                    class="btn btn-sm btn-success run-btn
+                            {% if cfg.status == 'running' %} disabled{% endif %}"
+                    id="run-btn-{{ loop.index }}"
+                    data-filename="{{ cfg.path_config }}">
                         <div class="spinner-border spinner-border-sm text-light"
-                             role="status"
-                             id="spinner-{{ loop.index }}"
-                             style="display:none;">
-                            <span class="sr-only">Loading...</span>
+                            role="status"
+                            id="spinner-{{ loop.index }}"
+                            style="display:{{ 'inline-block' if cfg.status == 'running' else 'none' }}">
+                            <span class="sr-only"></span>
                         </div>
-                        <i class="bi bi-play" id="play-icon-{{ loop.index }}"></i> Uitvoeren
+                        <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
+                        <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
+                        Uitvoeren
                     </a>
 
                     {% if cfg.exists_output %}
@@ -120,7 +135,7 @@
                             <i class="bi bi-search"></i> Resultaten
                         </a>
                     {% else %}
-                        <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary disabled">
+                        <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled">
                             <i class="bi bi-search"></i> Resultaten
                         </a>
                     {% endif %}
@@ -138,7 +153,7 @@
                                     Weet je zeker dat je het configuratiebestand <strong>{{ cfg.path_config }}</strong> wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
                                 </div>
                                 <div class="modal-footer">
-                                    <form action="{{ url_for('config_delete', filename=cfg.path_config) }}" method="POST">
+                                    <form action="{{ url_for('config_handler.config_delete', filename=cfg.path_config) }}" method="POST">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
                                         <button type="submit" class="btn btn-danger">Verwijderen</button>
                                     </form>
@@ -154,68 +169,75 @@
     </div>
 
     <div class="mt-3 text-start">
-        <a href="{{ url_for('config_new') }}" class="btn btn-secondary">
+        <a href="{{ url_for('config_handler.config_new') }}" class="btn btn-secondary">
             <i class="bi bi-file-earmark-plus"></i> Nieuwe Config
         </a>
     </div>
 </div>
+
+<!-- Ja/Nee Modal -->
+<div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="inputModalLabel">Bevestiging gevraagd</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+      </div>
+      <div class="modal-body">
+        <p>Genesis vraagt om een bevestiging. Wil je doorgaan?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="answerNo">Nee</button>
+        <button type="button" class="btn btn-success" id="answerYes">Ja</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    function updateAllStatuses() {
-        fetch("{{ url_for('runner.status_all') }}")
-            .then(response => response.json())
-            .then(statuses => {
-                {% for cfg in configs %}
-                const runButton = document.getElementById('run-btn-{{ loop.index }}');
-                const spinner = document.getElementById('spinner-{{ loop.index }}');
-                const playIcon = document.getElementById('play-icon-{{ loop.index }}');
+    let currentConfig = null;
+    const inputModal = new bootstrap.Modal(document.getElementById('inputModal'));
 
-                const status = statuses["{{ cfg.path_config }}"];
-                if (status === "running") {
-                    spinner.style.display = 'inline-block';
-                    playIcon.style.display = 'none';
-                    runButton.disabled = true;
-                } else {
-                    spinner.style.display = 'none';
-                    playIcon.style.display = 'inline-block';
-                    runButton.disabled = false;
-                }
-                {% endfor %}
-            });
+    function sendAnswer(answer) {
+        fetch("{{ url_for('runner.send_input') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                filename: currentConfig,
+                answer: answer
+            })
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            if (data.status === "ok") {
+                inputModal.hide();
+            } else {
+                alert("Fout: " + data.message);
+            }
+        })
+        .catch(err => alert("Netwerkfout: " + err));
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Voeg click event toe aan alle run-buttons
-        document.querySelectorAll('.run-btn').forEach(runButton => {
-            const spinner = runButton.querySelector('.spinner-border');
-            const playIcon = runButton.querySelector('.bi-play');
+    document.getElementById('answerYes').addEventListener('click', () => sendAnswer("J"));
+    document.getElementById('answerNo').addEventListener('click', () => sendAnswer("N"));
 
-            runButton.addEventListener('click', function(event) {
-                event.preventDefault();
+    document.addEventListener("DOMContentLoaded", function() {
+        const eventSource = new EventSource("{{ url_for('runner.stream') }}");
 
-                spinner.style.display = 'inline-block';
-                playIcon.style.display = 'none';
-                runButton.disabled = true;
-
-                fetch(runButton.href)
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.href = runButton.href;
-                        } else {
-                            spinner.style.display = 'none';
-                            playIcon.style.display = 'inline-block';
-                            runButton.disabled = false;
-                            alert("Fout bij starten van Genesis");
-                        }
-                    });
-            });
-        });
-
-        // Initieel statussen ophalen en daarna elke 2 seconden vernieuwen
-        updateAllStatuses();
-        setInterval(updateAllStatuses, 2000);
+        eventSource.onmessage = function(event) {
+            if (event.data.startsWith("waiting_input")) {
+                const parts = event.data.split("|");
+                currentConfig = parts[1];
+                inputModal.show();
+            } else if (event.data === "finished") {
+                updateAllStatuses();
+            } else {
+                console.log(event.data); // normale output
+            }
+        };
     });
 </script>
 <script>
