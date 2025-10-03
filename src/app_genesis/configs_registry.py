@@ -17,6 +17,7 @@ class ConfigRegistry:
     _instance = None
     CONFIG_DIR = Path("configs").resolve()
     _lock = threading.Lock()
+    statuses = {}  # {filename: 'idle' | 'running' | 'finished'}
 
     def __new__(cls):
         """Maakt een thread-safe singleton-instantie van het configuratieregister aan.
@@ -62,8 +63,43 @@ class ConfigRegistry:
             }
         return result
 
-    def get(self, filename: str) -> dict:
+    def get_configs(self) -> list[dict]:
+        return self.configs.values()
+
+    def get_config(self, filename: str) -> dict:
+        """Haalt de configuratie-informatie op voor een opgegeven bestandsnaam.
+
+        Deze methode retourneert de metadata en runner-instantie van het gevraagde configuratiebestand.
+
+        Args:
+            filename (str): De naam van het configuratiebestand.
+
+        Returns:
+            dict: De configuratiegegevens voor het opgegeven bestand, of None als het niet bestaat.
+        """
         return self.configs.get(filename)
+
+    def get_config_runner(self, filename: str) -> GenesisRunner | None:
+        """Geeft de GenesisRunner-instantie terug voor een opgegeven configuratiebestand.
+
+        Deze methode haalt de runner op die gekoppeld is aan het gevraagde configuratiebestand.
+
+        Args:
+            filename (str): De naam van het configuratiebestand.
+
+        Returns:
+            GenesisRunner | None: De runner-instantie voor het opgegeven bestand, of None als het niet bestaat.
+        """
+        config = self.configs.get(filename)
+        return config.get("runner")
+
+    def update_status(self, filename, status):
+        self.statuses[filename] = status
+
+    def config_runner_status(self, filename: str) -> str | None:
+        config = self.configs.get(filename)
+        runner = config.get("runner")
+        return runner.status()
 
     def add(self, file_config: str) -> None:
         """Voegt een nieuw configuratiebestand toe aan het register als het bestaat.

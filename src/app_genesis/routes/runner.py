@@ -1,12 +1,6 @@
 from pathlib import Path
 from ansi2html import Ansi2HTMLConverter
-from flask import (
-    Blueprint,
-    Response,
-    jsonify,
-    render_template,
-    request
-)
+from flask import Blueprint, Response, jsonify, render_template, request
 
 from configs_registry import ConfigRegistry
 
@@ -16,19 +10,18 @@ CONFIG_DIR = Path("configs").resolve()
 OUTPUT_DIR = Path("output").resolve()
 config_registry = ConfigRegistry()
 
+
 @runner.route("/run/<filename>")
 def config_run(filename: str) -> Response:
     """Start een GenesisRunner-proces voor een opgegeven configuratiebestand."""
-    config = config_registry.get(filename)
-    runner = config["runner"]
+    runner_instance = config_registry.get_config_runner(filename)
 
-    if runner.is_running():
-        # Als het proces al draait, geef een foutmelding terug
+    if runner_instance.is_running():
         error_message = f"Configuratiebestand '{filename}' draait al."
         return render_template("error.html", message=error_message), 400
 
     try:
-        runner.start()
+        runner_instance.start()
     except Exception as e:
         error_message = f"Fout bij het starten van de runner: {str(e)}"
         return render_template("error.html", message=error_message), 500
@@ -37,28 +30,50 @@ def config_run(filename: str) -> Response:
 
 
 @runner.route("/stream/<filename>")
-def stream(filename: str) -> Response:
+@runner.route("/stream/")  # New: Handles /stream/ (empty)
+def stream(filename: str = None) -> Response:  # Default None for empty
     """Streamt de uitvoer van de GenesisRunner naar de client als Server-Sent Events."""
+
     def generate():
-        config = config_registry.get(filename)
-        runner = config["runner"]
         conv = Ansi2HTMLConverter(inline=True)
+        # If filename None, stream all (global); else per-config
+        runners_to_watch = (
+            [config_registry.get_config_runner(filename=filename)]
+            if filename
+            else [config["runner"] for config in config_registry.get_configs()]
+        )
+
         try:
-            for line in runner.stream_output():
-                html_line = conv.convert(line, full=False).rstrip()
-                yield f"data: {html_line}\n\n"
+            while any(r.is_running() for r in runners_to_watch):  # Loop until all done
+                for runner in runners_to_watch:
+                    if runner.is_running():
+                        for line in runner.stream_output():
+                            html_line = conv.convert(line, full=False).rstrip()
+                            yield f"data: {html_line}\n\n"
 
-                if "doorgaan" in html_line or "antwoorden" in html_line:
-                    yield "data: asking_question\n\n"  # Indicate that user input is required
-                elif "Afgerond" in html_line:
-                    yield "data: finished\n\n"
-
-        except (BrokenPipeError, ConnectionResetError):
-            return
-        except Exception:
-            yield "data: [ERROR] Er is een interne fout opgetreden tijdens het streamen.\n\n"
+                            if "doorgaan" in html_line or "antwoorden" in html_line:
+                                yield f"data: waiting_input|{runner.path_config.name}\n\n"  # Include filename
+                            elif "Afgerond" in html_line:
+                                yield f"data: finished|{runner.path_config.name}\n\n"
+                # Heartbeat if quiet
+                yield ": heartbeat\n\n"
+        except GeneratorExit:
+            pass  # Client disconnect
+        except Exception as e:
+            yield f"data: [ERROR] {str(e)}\n\n"
 
     return Response(generate(), mimetype="text/event-stream")
+
+
+@runner.route("/statuses", methods=["GET"])
+def statuses():
+    statuses = []
+    for idx, (filename, config) in enumerate(config_registry.items(), 1):
+        runner_instance = config["runner"]
+        status = runner_instance.status()
+        statuses.append({"rowId": idx, "status": status})
+    return jsonify(statuses)
+
 
 # @runner.route("/check_running_status", methods=["POST"])
 # def check_running_status() -> Response:
@@ -87,39 +102,29 @@ def stream(filename: str) -> Response:
 #     return jsonify(running_configs)
 
 
-@runner.route("/input/<filename>", methods=["POST"])
-def input(filename: str) -> Response:
-    """Ontvangt invoer van de client en stuurt deze door naar de GenesisRunner."""
-    value = request.json.get("value")
-    if value is None or not isinstance(value, str) or not value.strip():
-        return jsonify({"status": "error", "message": "Invalid or missing input value."}), 400
-
-    config = config_registry.get(filename)
-    runner = config["runner"]
-    try:
-        runner.send_input(value)
-    except Exception as e:
-        return jsonify({"status": "error", "message": f"Failed to send input: {str(e)}"}), 500
-
-    return jsonify({"status": "ok"})
-
-
 @runner.route("/send_input", methods=["POST"])
 def send_input():
     data = request.get_json()
     filename = data.get("filename")
     answer = data.get("answer", "")
 
-    config = config_registry.get(filename)
-    runner = config["runner"]
+    if not filename or not answer:
+        return jsonify(
+            {"status": "error", "message": "Missing filename or answer."}
+        ), 400
 
-    if runner.process and runner.process.stdin:
+    runner_instance = config_registry.get_config_runner(filename)
+
+    if (
+        runner_instance.is_running()
+        and runner_instance.process
+        and runner_instance.process.stdin
+    ):
         try:
-            runner.process.stdin.write((answer + "\n").encode("utf-8"))
-            runner.process.stdin.flush()
+            runner_instance.process.stdin.write((answer + "\n").encode("utf-8"))
+            runner_instance.process.stdin.flush()
             return jsonify({"status": "ok"})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
     else:
-        return jsonify({"status": "error", "message": "Geen actief proces"}), 400
-
+        return jsonify({"status": "error", "message": "Geen actief proces."}), 400

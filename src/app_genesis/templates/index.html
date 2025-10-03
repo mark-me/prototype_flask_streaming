@@ -181,67 +181,86 @@
 
 {% block scripts %}
 <script>
-    let currentConfig = null;
-    const inputModal = new bootstrap.Modal(document.getElementById('inputModal'));
-
-    function sendAnswer(answer) {
-        fetch("{{ url_for('runner.send_input') }}", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                filename: currentConfig,
-                answer: answer
-            })
-        })
-        .then(resp => resp.json())
-        .then(data => {
-            if (data.status === "ok") {
-                inputModal.hide();
-            } else {
-                alert("Fout: " + data.message);
-            }
-        })
-        .catch(err => alert("Netwerkfout: " + err));
-    }
-
-    document.getElementById('answerYes').addEventListener('click', () => sendAnswer("J"));
-    document.getElementById('answerNo').addEventListener('click', () => sendAnswer("N"));
-
     document.addEventListener("DOMContentLoaded", function() {
-        const eventSource = new EventSource("{{ url_for('runner.stream', filename='') }}");
+        const inputModal = new bootstrap.Modal(document.getElementById('inputModal'));
+        let currentConfig = null;
 
+        // Modal listeners (now safely inside DOMContentLoaded)
+        document.getElementById('answerYes').addEventListener('click', () => sendAnswer("J"));
+        document.getElementById('answerNo').addEventListener('click', () => sendAnswer("N"));
+
+        function sendAnswer(answer) {
+            fetch("{{ url_for('runner.send_input') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ filename: currentConfig, answer: answer })
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    inputModal.hide();
+                } else {
+                    alert("Fout: " + data.message);
+                }
+            })
+            .catch(err => alert("Netwerkfout: " + err));
+        }
+
+        const eventSource = new EventSource("{{ url_for('runner.stream', filename='') }}");
         eventSource.onmessage = function(event) {
-            if (event.data.startsWith("waiting_input")) {
+            if (event.data.startsWith("awaiting_input")) {
                 const parts = event.data.split("|");
                 currentConfig = parts[1];
                 inputModal.show();
             } else if (event.data === "finished") {
-                updateAllStatuses();
+                updateAllStatuses();  // Now fetches real data
             } else {
-                console.log(event.data); // normale output
+                console.log(event.data);
             }
         };
-    });
+        eventSource.onerror = function(err) {
+            console.error("SSE error:", err);
+            // Optional: eventSource.close(); and reconnect logic
+        };
 
-    // Functie om de status van de configuraties bij te werken
-    function updateAllStatuses() {
-        {% for cfg in configs %}
-        const statusElement = document.getElementById("status-{{ loop.index }}");
-        const status = "{{ cfg.status }}";
-        if (status === 'running') {
-            statusElement.classList.remove("bg-secondary", "bg-success");
-            statusElement.classList.add("bg-warning");
-            statusElement.textContent = "Running";
-        } else if (status === 'finished') {
-            statusElement.classList.remove("bg-secondary", "bg-warning");
-            statusElement.classList.add("bg-success");
-            statusElement.textContent = "Finished";
-        } else {
-            statusElement.classList.remove("bg-warning", "bg-success");
-            statusElement.classList.add("bg-secondary");
-            statusElement.textContent = "Idle";
+        // Dynamically fetch and update statuses (no Jinja loop!)
+        function updateAllStatuses() {
+            fetch("{{ url_for('runner.statuses') }}")  // Add this endpoint!
+                .then(resp => resp.json())
+                .then(statuses => {
+                    statuses.forEach(({ rowId, status }) => {  // e.g., [{rowId: 1, status: 'finished'}, ...]
+                        const statusElement = document.getElementById(`status-${rowId}`);
+                        if (!statusElement) return;
+
+                        // Remove old classes
+                        statusElement.classList.remove("bg-secondary", "bg-warning", "bg-success");
+
+                        let newText, newClass;
+                        if (status === 'running') {
+                            newClass = "bg-warning";
+                            newText = "Running";
+                        } else if (status === 'finished') {
+                            newClass = "bg-success";
+                            newText = "Finished";
+                        } else {
+                            newClass = "bg-secondary";
+                            newText = "Idle";
+                        }
+
+                        statusElement.classList.add(newClass);
+                        statusElement.textContent = newText;
+
+                        // Optional: Update icons/spinners too
+                        const spinner = document.getElementById(`spinner-${rowId}`);
+                        const playIcon = document.getElementById(`play-icon-${rowId}`);
+                        const checkIcon = document.getElementById(`check-icon-${rowId}`);
+                        if (spinner) spinner.style.display = status === 'running' ? 'inline-block' : 'none';
+                        if (playIcon) playIcon.style.display = status === 'idle' ? 'inline-block' : 'none';
+                        if (checkIcon) checkIcon.style.display = status === 'finished' ? 'inline-block' : 'none';
+                    });
+                })
+                .catch(err => console.error("Status update failed:", err));
         }
-        {% endfor %}
-    }
+    });
 </script>
 {% endblock %}
