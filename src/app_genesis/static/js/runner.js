@@ -1,7 +1,7 @@
 const consoleBox = document.getElementById("console");
 
 // Haal het configuratiebestand op van een element (zoals data-attribute)
-const configFile = document.getElementById("configFile").dataset.filename;  // Dit hangt af van je HTML
+const configFile = document.getElementById("config").dataset.filename;  // Dit hangt af van je HTML
 
 const evtSource = new EventSource(`/runner/stream/${configFile}`); // Gebruik specifieke bestandsnaam in de URL
 
