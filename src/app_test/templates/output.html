@@ -1,0 +1,106 @@
+<!-- templates/output.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h1>Output voor {{ filename }}</h1>
+    <pre id="output" style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; overflow: auto; max-height: 600px;"></pre>
+    <a href="/" class="btn btn-primary">Terug naar hoofdpagina</a>
+</div>
+
+<!-- Modal voor input (duplicaat voor dit scherm) -->
+<div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="inputModalLabel">Input vereist voor {{ filename }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-prompt"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="sendInput('n')">Nee</button>
+                <button type="button" class="btn btn-primary" onclick="sendInput('j')">Ja</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+    let modalInstance = null;
+    var source = new EventSource('/stream_output/{{ filename }}');
+    source.onmessage = function(event) {
+        let output = document.getElementById('output');
+        if (output) {
+            output.innerHTML += (event.data + '<br>').replace(/\x1b\[[0-9;]*m/g, ''); // Strip ANSI colors if present
+        }
+    };
+    source.onerror = function(event) {
+        console.error('SSE error:', event);
+    };
+
+    function checkAwaiting() {
+        fetch('/status')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                let info = data['{{ filename }}'];
+                if (info && info.status === 'awaiting_input') {
+                    document.getElementById('modal-prompt').innerText = info.prompt || 'Input vereist.';
+                    if (!modalInstance) {
+                        modalInstance = new bootstrap.Modal(document.getElementById('inputModal'));
+                    }
+                    modalInstance.show();
+                }
+            })
+            .catch(error => {
+                console.error('Error checking awaiting:', error);
+            });
+    }
+
+    window.sendInput = function(answer) {
+        fetch('/input/{{ filename }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answer: answer })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Input send failed');
+            }
+            return response.json();
+        })
+        .then(() => {
+            if (modalInstance) {
+                modalInstance.hide();
+                modalInstance.dispose();
+                modalInstance = null;
+            }
+            setTimeout(checkAwaiting, 500);
+        })
+        .catch(error => {
+            console.error('Error sending input:', error);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        });
+    };
+
+    // Event listener voor modal close
+    document.getElementById('inputModal').addEventListener('hidden.bs.modal', function () {
+        if (modalInstance) {
+            modalInstance.dispose();
+            modalInstance = null;
+        }
+    });
+
+    setInterval(checkAwaiting, 1000);
+    checkAwaiting();
+});
+</script>
+{% endblock %}
