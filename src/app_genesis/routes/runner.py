@@ -1,130 +1,157 @@
+import threading
+import time
 from pathlib import Path
-from ansi2html import Ansi2HTMLConverter
-from flask import Blueprint, Response, jsonify, render_template, request
 
+from ansi2html import Ansi2HTMLConverter
 from configs_registry import ConfigRegistry
+from flask import Blueprint, Response, jsonify, render_template, request
 
 runner = Blueprint("runner", __name__)
 
 CONFIG_DIR = Path("configs").resolve()
 OUTPUT_DIR = Path("output").resolve()
 config_registry = ConfigRegistry()
+outputs = {}  # filename: {'lines': [], 'prompt': None, 'awaiting': False, 'lock': threading.Lock()}
 
 
 @runner.route("/run/<filename>")
 def config_run(filename: str) -> Response:
-    """Start een GenesisRunner-proces voor een opgegeven configuratiebestand."""
-    runner_instance = config_registry.get_config_runner(filename)
+    """Start de GenesisRunner voor het opgegeven configuratiebestand.
 
-    if runner_instance.is_running():
-        error_message = f"Configuratiebestand '{filename}' draait al."
-        return render_template("error.html", message=error_message), 400
+    Als de runner inactief of afgerond is, wordt deze gereset en opnieuw gestart. Verzamelt uitvoerregels en handelt prompts af.
+    Geeft een JSON-respons terug die aangeeft of de run is gestart of al actief is.
 
-    try:
-        runner_instance.start()
-    except Exception as e:
-        error_message = f"Fout bij het starten van de runner: {str(e)}"
-        return render_template("error.html", message=error_message), 500
+    Args:
+        filename: De naam van het te draaien configuratiebestand.
 
-    return render_template("runner.html", config=filename)
+    Returns:
+        Response: Een Flask JSON-respons met de status van de run.
+    """
+    runner = config_registry.get_config_runner(filename)
+    if filename not in outputs:
+        outputs[filename] = {
+            "lines": [],
+            "prompt": None,
+            "awaiting": False,
+            "lock": threading.Lock(),
+        }
+    if runner.status in ["idle", "finished"]:
+        if runner.status == "finished":
+            runner.stop()  # Reset to idle
+        # Clear previous output for new run
+        with outputs[filename]["lock"]:
+            outputs[filename]["lines"] = []
+            outputs[filename]["prompt"] = None
+            outputs[filename]["awaiting"] = False
+        runner.start()
+
+        def collector():
+            for line in runner.stream_output():
+                with outputs[filename]["lock"]:
+                    outputs[filename]["lines"].append(line)
+                    if any(["doorgaan" in line.lower(), "antwoorden" in line.lower()]):
+                        outputs[filename]["prompt"] = line.strip()
+                        outputs[filename]["awaiting"] = True
+                    if "Afgerond" in line:
+                        pass  # Finished handled by status
+            # After stream ends, ensure status updates
+
+        threading.Thread(target=collector, daemon=True).start()
+        return jsonify({"status": "started"})
+    else:
+        return jsonify({"status": "already_running"}), 400
+
+
+@runner.route("/show-output/<filename>")
+def show_output(filename):
+    return render_template("runner.html", filename=filename)
 
 
 @runner.route("/stream/<filename>")
-@runner.route("/stream/")  # New: Handles /stream/ (empty)
 def stream(filename: str = None) -> Response:  # Default None for empty
-    """Streamt de uitvoer van de GenesisRunner naar de client als Server-Sent Events."""
+    """Streamt de uitvoer van de GenesisRunner voor het opgegeven configuratiebestand als server-sent events.
+
+    Zet nieuwe uitvoerregels om naar HTML en stuurt deze in realtime naar de client. Sluit de stream af wanneer de runner klaar is.
+
+    Args:
+        filename: De naam van het configuratiebestand waarvan de uitvoer wordt gestreamd.
+
+    Returns:
+        Response: Een Flask Response-object dat server-sent events streamt.
+    """
 
     def generate():
+        """Genereert server-sent events voor de uitvoer van een GenesisRunner-configuratie.
+
+        Streamt nieuwe uitvoerregels in HTML-formaat naar de client totdat de runner is afgerond.
+
+        Yields:
+            str: Server-sent event data met de uitvoerregel of een eindmelding.
+        """
+        if filename not in outputs:
+            yield "data: No output\n\n"
+            return
+        last_sent = 0
         conv = Ansi2HTMLConverter(inline=True)
-        # If filename None, stream all (global); else per-config
-        runners_to_watch = (
-            [config_registry.get_config_runner(filename=filename)]
-            if filename
-            else [config["runner"] for config in config_registry.get_configs()]
-        )
-
-        try:
-            while any(r.is_running() for r in runners_to_watch):  # Loop until all done
-                for runner in runners_to_watch:
-                    if runner.is_running():
-                        for line in runner.stream_output():
-                            html_line = conv.convert(line, full=False).rstrip()
-                            yield f"data: {html_line}\n\n"
-
-                            if "doorgaan" in html_line or "antwoorden" in html_line:
-                                yield f"data: waiting_input|{runner.path_config.name}\n\n"  # Include filename
-                            elif "Afgerond" in html_line:
-                                yield f"data: finished|{runner.path_config.name}\n\n"
-                # Heartbeat if quiet
-                yield ": heartbeat\n\n"
-        except GeneratorExit:
-            pass  # Client disconnect
-        except Exception as e:
-            yield f"data: [ERROR] {str(e)}\n\n"
+        while True:
+            with outputs[filename]["lock"]:
+                current_lines = outputs[filename]["lines"]
+                for line in current_lines[last_sent:]:
+                    html_line = conv.convert(line, full=False).rstrip()
+                    yield f"data: {html_line}\n\n"
+                last_sent = len(current_lines)
+                runner = config_registry.get_config_runner(filename)
+            if runner.status == "finished":
+                yield "data: [END]\n\n"
+                break
+            time.sleep(0.5)
 
     return Response(generate(), mimetype="text/event-stream")
 
 
-@runner.route("/statuses", methods=["GET"])
-def statuses():
-    statuses = []
-    for idx, (filename, config) in enumerate(config_registry.items(), 1):
-        runner_instance = config["runner"]
-        status = runner_instance.status()
-        statuses.append({"rowId": idx, "status": status})
-    return jsonify(statuses)
+@runner.route("/status")
+def get_status():
+    """Geeft de huidige status en eventuele prompts van alle GenesisRunner-configuraties terug.
+
+    Bepaalt voor elk configuratiebestand de status en of er op invoer wordt gewacht.
+    Retourneert een JSON-object met de status en prompt per configuratie.
+
+    Returns:
+        Response: Een Flask JSON-respons met de status en prompt van elke configuratie.
+    """
+    status_dict = {}
+    for filename in config_registry.configs:
+        runner = config_registry.get_config_runner(filename)
+        stat = runner.status
+        awaiting = False
+        prompt = None
+        if filename in outputs:
+            with outputs[filename]["lock"]:
+                awaiting = outputs[filename]["awaiting"]
+                prompt = outputs[filename]["prompt"]
+        if awaiting:
+            stat = "awaiting_input"
+        status_dict[filename] = {"status": stat, "prompt": prompt}
+    return jsonify(status_dict)
 
 
-# @runner.route("/check_running_status", methods=["POST"])
-# def check_running_status() -> Response:
-#     """Controleert of een opgegeven configuratie momenteel actief is.
+@runner.route("/input/<filename>", methods=["POST"])
+def send_input(filename):
+    """Stuurt gebruikersinvoer naar de GenesisRunner voor het opgegeven configuratiebestand.
 
-#     Ontvangt de bestandsnaam van de client en retourneert of deze configuratie als 'running' is gemarkeerd.
+    Ontvangt een antwoord van de client en levert dit aan de runner.
+    Zet de promptstatus terug en geeft een bevestiging terug.
 
-#     Returns:
-#         Response: Een JSON-object met de sleutel 'is_running' die aangeeft of de configuratie actief is.
-#     """
-#     data = request.get_json()
-#     filename = data.get("filename")
-#     is_running = running_configs.get(filename) == "running"
-#     return jsonify({"is_running": is_running})
+    Args:
+        filename: De naam van het configuratiebestand waarvoor invoer wordt verzonden.
 
-
-# @runner.route("/status/all", methods=["GET"])
-# def status_all() -> Response:
-#     """Geeft een overzicht van de status van alle bekende configuraties.
-
-#     Retourneert een JSON-object met de status van alle momenteel bekende configuratiebestanden.
-
-#     Returns:
-#         Response: Een JSON-object met de status van alle configuraties.
-#     """
-#     return jsonify(running_configs)
-
-
-@runner.route("/send_input", methods=["POST"])
-def send_input():
-    data = request.get_json()
-    filename = data.get("filename")
-    answer = data.get("answer", "")
-
-    if not filename or not answer:
-        return jsonify(
-            {"status": "error", "message": "Missing filename or answer."}
-        ), 400
-
-    runner_instance = config_registry.get_config_runner(filename)
-
-    if (
-        runner_instance.is_running()
-        and runner_instance.process
-        and runner_instance.process.stdin
-    ):
-        try:
-            runner_instance.process.stdin.write((answer + "\n").encode("utf-8"))
-            runner_instance.process.stdin.flush()
-            return jsonify({"status": "ok"})
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)}), 500
-    else:
-        return jsonify({"status": "error", "message": "Geen actief proces."}), 400
+    Returns:
+        Response: Een Flask JSON-respons die bevestigt dat de invoer is verzonden.
+    """
+    answer = request.json.get("answer")
+    runner = config_registry.get_config_runner(filename)
+    runner.send_input(answer)
+    with outputs[filename]["lock"]:
+        outputs[filename]["awaiting"] = False
+        outputs[filename]["prompt"] = None
+    return jsonify({"status": "sent"})

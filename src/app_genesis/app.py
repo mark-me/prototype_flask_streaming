@@ -23,9 +23,6 @@ app.register_blueprint(browser, url_prefix="/browser")
 app.register_blueprint(config_handler, url_prefix="/configs")
 app.register_blueprint(runner, url_prefix="/runner")
 
-
-CONFIG_DIR = Path("configs").resolve()
-OUTPUT_DIR = Path("output").resolve()
 config_registry = ConfigRegistry()
 
 
@@ -38,9 +35,14 @@ def index() -> Response:
     Returns:
         Response: Een HTML-pagina met een lijst van configuratiebestanden.
     """
-    sort_by = request.args.get("sort_by", "name")  # 'name' is standaard
-    configs = config_registry.get_status_all()
-    return render_template("index.html", configs=configs, sort_by=sort_by)
+    sort_by = request.args.get('sort', 'name')
+    order = request.args.get('order', 'asc')
+    configs = list(config_registry.get_configs())
+    key_map = {'name': 'path_config', 'created': 'created', 'modified': 'modified'}
+    key = key_map.get(sort_by, 'path_config')
+    reverse = order == 'desc'
+    configs.sort(key=lambda x: x[key], reverse=reverse)
+    return render_template('index.html', configs=configs, sort_by=sort_by, order=order)
 
 
 @app.template_filter("datetimeformat")
