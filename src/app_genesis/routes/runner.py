@@ -14,8 +14,8 @@ config_registry = ConfigRegistry()
 outputs = {}  # filename: {'lines': [], 'prompt': None, 'awaiting': False, 'lock': threading.Lock()}
 
 
-@runner.route("/run/<filename>")
-def config_run(filename: str) -> Response:
+@runner.route("/start/<filename>")
+def start(filename: str) -> Response:
     """Start de GenesisRunner voor het opgegeven configuratiebestand.
 
     Als de runner inactief of afgerond is, wordt deze gereset en opnieuw gestart. Verzamelt uitvoerregels en handelt prompts af.

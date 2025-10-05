@@ -82,11 +82,10 @@
         <table class="table table-striped">
         <thead>
             <tr>
-                <th><a href="?sort=name&order={% if sort_by == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}">Naam</a></th>
+                <th width="15%"><a href="?sort=name&order={% if sort_by == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}">Naam</a></th>
                 <th>Actie</th>
-                <th>Status</th>
-                <th><a href="?sort=created&order={% if sort_by == 'created' and order == 'asc' %}desc{% else %}asc{% endif %}">Creatiedatum</a></th>
-                <th><a href="?sort=modified&order={% if sort_by == 'modified' and order == 'asc' %}desc{% else %}asc{% endif %}">Wijzigingsdatum</a></th>
+                <th width="15%"><a href="?sort=created&order={% if sort_by == 'created' and order == 'asc' %}desc{% else %}asc{% endif %}">Creatiedatum</a></th>
+                <th width="15%"><a href="?sort=modified&order={% if sort_by == 'modified' and order == 'asc' %}desc{% else %}asc{% endif %}">Wijzigingsdatum</a></th>
             </tr>
         </thead>
         <tbody>
@@ -95,38 +94,39 @@
                 <td>
                 <i class="bi bi-filetype-yml"></i> {{ cfg.path_config }}
                 </td>
-                <td id="action-{{ cfg.path_config }}">
-                    <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
-                        <i class="bi bi-pencil"></i> Bewerken
-                    </a>
-                    <a href="{{ url_for('runner.config_run', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-success run-btn
+                <td>
+                    <div id="action-{{ cfg.path_config }}" class="d-flex gap-2">
+                        <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i> Bewerken
+                        </a>
+                        <a href="{{ url_for('runner.start', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-success run-btn
                             {% if cfg.status == 'running' %} disabled{% endif %}"
-                        id="run-btn-{{ loop.index }}"
-                        data-filename="{{ cfg.path_config }}">
-                        <div class="spinner-border spinner-border-sm text-light"
-                            role="status"
-                            id="spinner-{{ loop.index }}"
-                            style="display:{{ 'inline-block' if cfg.status == 'running' else 'none' }}">
-                            <span class="sr-only"></span>
-                        </div>
-                        <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
-                        <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
-                        Uitvoeren
-                    </a>
-                    {% if cfg.exists_output %}
-                        <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
-                            <i class="bi bi-search"></i> Resultaten
+                            id="run-btn-{{ loop.index }}"
+                            data-filename="{{ cfg.path_config }}">
+                            <div class="spinner-border spinner-border-sm text-light"
+                                role="status"
+                                id="spinner-{{ loop.index }}"
+                                style="display:{{ 'inline-block' if cfg.status == 'running' else 'none' }}">
+                                <span class="sr-only"></span>
+                            </div>
+                            <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
+                            <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
+                            Uitvoeren
                         </a>
-                    {% else %}
-                        <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled">
-                            <i class="bi bi-search"></i> Resultaten
-                        </a>
-                    {% endif %}
-                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                        {% if cfg.exists_output %}
+                            <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="bi bi-search"></i> Resultaten
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled">
+                                <i class="bi bi-search"></i> Resultaten
+                            </a>
+                        {% endif %}
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 </td>
-                <td id="status-{{ cfg.path_config }}"></td>
                 <td>
                     {% if cfg.created %}
                         {{ cfg.created.strftime("%Y-%m-%d %H:%M") }}
@@ -140,11 +140,6 @@
                     {% else %}
                         <span class="text-muted">Onbekend</span>
                     {% endif %}
-                </td>
-                <td>
-                    <span id="status-{{ loop.index }}" class="badge {% if cfg.status == 'running' %}bg-warning{% elif cfg.status == 'finished' %}bg-success{% else %}bg-secondary{% endif %}">
-                        {{ cfg.status | capitalize }}
-                    </span>
                 </td>
             </tr>
             {% endfor %}
@@ -196,10 +191,6 @@ window.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 for (let filename in data) {
                     let stat = data[filename].status;
-                    let statusCell = document.getElementById('status-' + filename);
-                    if (statusCell) {
-                        statusCell.innerText = stat;
-                    }
                     let actionCell = document.getElementById('action-' + filename);
                     if (actionCell) {
                         if (stat === 'idle' || stat === 'finished') {
@@ -226,7 +217,7 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 
     window.startProcess = function(filename) {
-        fetch('/start/' + filename, { method: 'POST' })
+        fetch('/runner/start/' + filename, { method: 'POST' })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Start failed: ' + response.statusText);
@@ -239,7 +230,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
     window.sendInput = function(answer) {
         let filename = document.getElementById('modal-filename').innerText;
-        fetch('/input/' + filename, {
+        fetch('/runner/input/' + filename, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ answer: answer })
