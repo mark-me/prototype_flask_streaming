@@ -48,7 +48,7 @@ def index() -> Response:
 @app.template_filter("datetimeformat")
 def datetimeformat(value):
     """Formateer de datum naar een leesbaar formaat."""
-    return datetime.utcfromtimestamp(value).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.fromtimestamp(value, tz=None).strftime("%Y-%m-%d %H:%M:%S")
 
 
 @app.route("/about")
