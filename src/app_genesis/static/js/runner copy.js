@@ -46,6 +46,8 @@ document.addEventListener("DOMContentLoaded", function() {
     evtSource.onerror = function(err) {
         console.error("SSE error:", err);
         appendLine('<span class="text-danger">Connectie verloren. Herlaad de pagina om te hervatten.</span>');
+        // Optioneel: reconnect na 5s
+        // setTimeout(() => { evtSource = new EventSource(...); }, 5000);
     };
 
 });

@@ -1,264 +1,178 @@
-{% extends "base.html" %}
-{% block title %}Home{% endblock %}
+    {% extends "base.html" %}
+    {% block title %}Home{% endblock %}
 
-{% block content %}
-<div class="mt-4">
-        <!-- Introductie -->
-    <div class="row align-items-center mb-5">
-        <!-- Logo links -->
-        <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
-            <img src="{{ url_for('static', filename='images/logo.png') }}"
-                 alt="Genesis Logo"
-                 class="img-fluid"
-                 style="max-width: 125px; height: auto;">
+    {% block content %}
+    <div class="mt-4">
+            <!-- Introductie -->
+        <div class="row align-items-center mb-5">
+            <!-- Logo links -->
+            <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
+                <img src="{{ url_for('static', filename='images/logo.png') }}"
+                    alt="Genesis Logo"
+                    class="img-fluid"
+                    style="max-width: 125px; height: auto;">
+            </div>
+            <!-- Tekst rechts -->
+            <div class="col-md-10">
+                <h1 class="display-5 fw-bold">Welkom bij Genesis</h1>
+                <p class="lead text-muted">
+                    Met Genesis Web beheer je eenvoudig configuratiebestanden, voer je Genesis uit,
+                    verken je de resultaten en kun je issues in de modellen identificeren.
+                    Alles overzichtelijk vanuit één webinterface.
+                </p>
+            </div>
         </div>
-        <!-- Tekst rechts -->
-        <div class="col-md-10">
-            <h1 class="display-5 fw-bold">Welkom bij Genesis</h1>
-            <p class="lead text-muted">
-                Met Genesis Web beheer je eenvoudig configuratiebestanden, voer je Genesis uit,
-                verken je de resultaten en kun je issues in de modellen identificeren.
-                Alles overzichtelijk vanuit één webinterface.
-            </p>
-        </div>
-    </div>
 
-    <!-- Stappenplan -->
-    <div class="row text-center mb-5">
-        <div class="col-md-3">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3 text-secondary">
-                        <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+        <!-- Stappenplan -->
+        <div class="row text-center mb-5">
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-secondary">
+                            <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">1. Kiezen</h5>
+                        <p class="card-text">Selecteer, bewerk of maak een configuratiebestand.</p>
                     </div>
-                    <h5 class="card-title">1. Kiezen</h5>
-                    <p class="card-text">Selecteer, bewerk of maak een configuratiebestand.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-pencil-square" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">2. Bewerken</h5>
+                        <p class="card-text">Open de ingebouwde editor om je configuratie direct aan te passen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-success">
+                            <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">3. Uitvoeren</h5>
+                        <p class="card-text">Start Genesis en volg de voortgang live in de console-uitvoer.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-primary">
+                            <i class="bi bi-search" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">4. Verkennen</h5>
+                        <p class="card-text">Verken resultaten en aangetroffen issues in de modelbestanden.</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3 text-warning">
-                        <i class="bi bi-pencil-square" style="font-size: 2rem;"></i>
-                    </div>
-                    <h5 class="card-title">2. Bewerken</h5>
-                    <p class="card-text">Open de ingebouwde editor om je configuratie direct aan te passen.</p>
-                </div>
+        <!-- Configuratie bestanden overzicht -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Beschikbare configuratiebestanden</h5>
             </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3 text-success">
-                        <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
-                    </div>
-                    <h5 class="card-title">3. Uitvoeren</h5>
-                    <p class="card-text">Start Genesis en volg de voortgang live in de console-uitvoer.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3 text-primary">
-                        <i class="bi bi-search" style="font-size: 2rem;"></i>
-                    </div>
-                    <h5 class="card-title">4. Verkennen</h5>
-                    <p class="card-text">Verken resultaten en aangetroffen issues in de modelbestanden.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuratie bestanden overzicht -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white">
-            <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Beschikbare configuratiebestanden</h5>
-        </div>
-        <table class="table table-striped">
-        <thead>
-            <tr>
-                <th width="15%"><a href="?sort=name&order={% if sort_by == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}">Naam</a></th>
-                <th>Actie</th>
-                <th width="15%"><a href="?sort=created&order={% if sort_by == 'created' and order == 'asc' %}desc{% else %}asc{% endif %}">Creatiedatum</a></th>
-                <th width="15%"><a href="?sort=modified&order={% if sort_by == 'modified' and order == 'asc' %}desc{% else %}asc{% endif %}">Wijzigingsdatum</a></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cfg in configs %}
-            <tr id="row-{{ loop.index }}">
-                <td>
-                <i class="bi bi-filetype-yml"></i> {{ cfg.path_config }}
-                </td>
-                <td>
-                    <div id="action-{{ cfg.path_config }}" class="d-flex gap-2">
-                        <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
-                            <i class="bi bi-pencil"></i> Bewerken
-                        </a>
-                        <form action="/runner/start/{{ cfg.path_config }}" method="POST" style="display: inline;">
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
-                                <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
-                            Uitvoeren
+            <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="15%"><a href="?sort=name&order={% if sort_by == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}">Naam</a></th>
+                    <th>Actie</th>
+                    <th width="15%"><a href="?sort=created&order={% if sort_by == 'created' and order == 'asc' %}desc{% else %}asc{% endif %}">Creatiedatum</a></th>
+                    <th width="15%"><a href="?sort=modified&order={% if sort_by == 'modified' and order == 'asc' %}desc{% else %}asc{% endif %}">Wijzigingsdatum</a></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cfg in configs %}
+                <tr id="row-{{ loop.index }}">
+                    <td>
+                    <i class="bi bi-filetype-yml"></i> {{ cfg.path_config }}
+                    </td>
+                    <td>
+                        <div id="action-{{ cfg.path_config }}" class="d-flex gap-2">
+                            <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i> Bewerken
+                            </a>
+                            <form action="/runner/start/{{ cfg.path_config }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
+                                    <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
+                                Uitvoeren
+                                </button>
+                            </a>
+                            {% if cfg.exists_output %}
+                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-search"></i> Resultaten
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled">
+                                    <i class="bi bi-search"></i> Resultaten
+                                </a>
+                            {% endif %}
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
+                                <i class="bi bi-trash"></i>
                             </button>
-                        </a>
-                        {% if cfg.exists_output %}
-                            <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
-                                <i class="bi bi-search"></i> Resultaten
-                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        {% if cfg.created %}
+                            {{ cfg.created.strftime("%Y-%m-%d %H:%M") }}
                         {% else %}
-                            <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled">
-                                <i class="bi bi-search"></i> Resultaten
-                            </a>
+                            <span class="text-muted">Onbekend</span>
                         {% endif %}
-                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </td>
-                <td>
-                    {% if cfg.created %}
-                        {{ cfg.created.strftime("%Y-%m-%d %H:%M") }}
-                    {% else %}
-                        <span class="text-muted">Onbekend</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if cfg.modified %}
-                        {{ cfg.modified.strftime("%Y-%m-%d %H:%M") }}
-                    {% else %}
-                        <span class="text-muted">Onbekend</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        </table>
-    </div>
+                    </td>
+                    <td>
+                        {% if cfg.modified %}
+                            {{ cfg.modified.strftime("%Y-%m-%d %H:%M") }}
+                        {% else %}
+                            <span class="text-muted">Onbekend</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
 
-    <div class="mt-3 text-start">
-        <a href="{{ url_for('config_handler.config_new') }}" class="btn btn-secondary">
-            <i class="bi bi-file-earmark-plus"></i> Nieuwe Config
-        </a>
-    </div>
-</div>
-
-<!-- Ja/Nee Modal -->
-<div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="inputModalLabel">Input vereist voor <span id="modal-filename"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="modal-prompt"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="sendInput('n')">Nee</button>
-                <button type="button" class="btn btn-primary" onclick="sendInput('j')">Ja</button>
-            </div>
+        <div class="mt-3 text-start">
+            <a href="{{ url_for('config_handler.config_new') }}" class="btn btn-secondary">
+                <i class="bi bi-file-earmark-plus"></i> Nieuwe Config
+            </a>
         </div>
     </div>
-</div>
 
-{% endblock %}
+    {% include "_modal.html" %}
 
-{% block scripts %}
-<script>
-window.addEventListener('DOMContentLoaded', function() {
-    let modalInstance = null;
+    {% endblock %}
 
-    function updateStatuses() {
-        fetch('/status')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+    {% block scripts %}
+    <script type="module">
+        import { startPolling, stopPolling, showModal, sendModalInput, setupModalCleanup } from "{{ url_for('static', filename='js/modal.js') }}";
+
+        setupModalCleanup();
+
+        function updateStatuses(data) {
+            for (const filename in data) {
+                const stat = data[filename].status;
+                if (stat === 'awaiting_input') {
+                    showModal(filename, data[filename].prompt);
                 }
-                return response.json();
-            })
-            .then(data => {
-                for (let filename in data) {
-                    let stat = data[filename].status;
-                    let actionCell = document.getElementById('action-' + filename);
-                    if (actionCell) {
-                        if (stat === 'idle' || stat === 'finished') {
-                            actionCell.innerHTML = '<button class="btn btn-success btn-sm" onclick="startProcess(\'' + filename + '\')"><i class="bi bi-play-fill"></i></button>';
-                        } else if (stat === 'running' || stat === 'awaiting_input') {
-                            actionCell.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> <a href="/output/' + filename + '" class="btn btn-info btn-sm">Bekijk output</a>';
-                        } else {
-                            actionCell.innerHTML = '';
-                        }
-                    }
-                    if (stat === 'awaiting_input') {
-                        document.getElementById('modal-filename').innerText = filename;
-                        document.getElementById('modal-prompt').innerText = data[filename].prompt || 'Input vereist.';
-                        if (!modalInstance) {
-                            modalInstance = new bootstrap.Modal(document.getElementById('inputModal'));
-                        }
-                        modalInstance.show();
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error updating statuses:', error);
-            });
-    }
-
-    window.startProcess = function(filename) {
-        fetch('/runner/start/' + filename, { method: 'POST' })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Start failed: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(() => updateStatuses())
-            .catch(error => console.error('Error starting process:', error));
-    };
-
-    window.sendInput = function(answer) {
-        let filename = document.getElementById('modal-filename').innerText;
-        fetch('/runner/input/' + filename, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ answer: answer })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Input send failed');
             }
-            return response.json();
-        })
-        .then(() => {
-            if (modalInstance) {
-                modalInstance.hide();
-                modalInstance.dispose();
-                modalInstance = null;
-            }
-            setTimeout(updateStatuses, 500);
-        })
-        .catch(error => {
-            console.error('Error sending input:', error);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        });
-    };
-
-    document.getElementById('inputModal').addEventListener('hidden.bs.modal', function () {
-        if (modalInstance) {
-            modalInstance.dispose();
-            modalInstance = null;
         }
-    });
 
-    setInterval(updateStatuses, 1000);
-    updateStatuses();
-});
-</script>
-{% endblock %}
+        startPolling('/runner/status', updateStatuses, 1000);
+
+        window.sendInput = (answer) => {
+            const filename = document.getElementById('modal-filename').innerText;
+            sendModalInput(filename, answer, '/runner/input').then(() => {
+                // opnieuw ophalen na input
+            });
+        };
+    </script>
+    {% endblock %}

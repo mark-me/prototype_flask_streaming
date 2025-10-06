@@ -1,0 +1,21 @@
+<!-- Model inputscherm voor Ja/Nee vraag -->
+<div class="modal fade" id="inputModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bevestiging vereist</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-prompt">...</p>
+        <p>
+          <strong>Bestand:</strong> <span id="modal-filename"></span>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="sendInput('J')">Ja</button>
+        <button type="button" class="btn btn-danger" onclick="sendInput('N')">Nee</button>
+      </div>
+    </div>
+  </div>
+</div>

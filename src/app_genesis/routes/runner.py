@@ -49,7 +49,7 @@ def start(filename: str) -> Response:
             for line in runner.stream_output():
                 with outputs[filename]["lock"]:
                     outputs[filename]["lines"].append(line)
-                    if any(["doorgaan" in line.lower(), "antwoorden" in line.lower(), "?" in line]):
+                    if all(["(j/n)" in line.lower(), "?" in line]):
                         outputs[filename]["prompt"] = line.strip()
                         outputs[filename]["awaiting"] = True
                     if "Afgerond" in line:

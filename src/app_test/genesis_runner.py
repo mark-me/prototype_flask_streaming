@@ -85,7 +85,7 @@ class GenesisRunner:
         """
         try:
             for line in iter(self._process.stdout.readline, ""):  # Line-by-line for better buffering
-                if any(["doorgaan" in line.lower(), "antwoorden" in line.lower()]):
+                if all(["(j/n)" in line.lower(), "?" in line]):
                     self._status = "awaiting_input"
                 elif "Afgerond" in line:
                     self._status = "finished"
