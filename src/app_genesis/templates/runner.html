@@ -22,8 +22,82 @@
     </div>
 </div>
 
+<!-- Ja/Nee Modal -->
+<div class="modal fade" id="inputModal" tabindex="-1" aria-labelledby="inputModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="inputModalLabel">Input vereist voor <span id="modal-filename"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-prompt"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="sendInput('n')">Nee</button>
+                <button type="button" class="btn btn-primary" onclick="sendInput('j')">Ja</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('static', filename='js/runner.js') }}"></script>
+<script src="{{ url_for('static', filename='js/runner.js') }}"></script>
+<script>
+    const configName = "{{ config }}";  // De config-naam voor API-calls
+    const modal = document.getElementById('inputModal');
+    const promptText = document.getElementById('promptText');
+    const outputDiv = document.getElementById('outputContainer');  // Waar de stream-output zit
+
+    // Functie om status te checken
+    function checkStatus() {
+        fetch(`/runner/status`)
+            .then(response => response.json())
+            .then(data => {
+                const status = data[configName];
+                if (status && status.status === 'awaiting_input' && status.prompt) {
+                    // Toon modal met de prompt
+                    promptText.textContent = status.prompt;
+                    modal.style.display = 'block';  // Of 'flex' afhankelijk van je CSS
+                    // Scroll naar de output voor context (optioneel)
+                    outputDiv.scrollTop = outputDiv.scrollHeight;
+                } else if (status && status.status === 'finished') {
+                    // Optioneel: Toon een "Klaar!" bericht en stop polling
+                    console.log('Run finished!');
+                    // clearInterval(pollInterval);  // Uncomment om polling te stoppen
+                }
+            })
+            .catch(error => console.error('Status check failed:', error));
+    }
+
+    // Start polling elke 2 seconden
+    const pollInterval = setInterval(checkStatus, 2000);
+
+    // Sluit modal bij klik buiten (standaard modal-gedrag)
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Voor de Ja/Nee knoppen: Ze posten al naar /input, maar voeg event.preventDefault() toe als nodig
+    document.querySelectorAll('.answer-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const answer = this.value;  // "Ja" of "Nee"
+            fetch(`/runner/input/${configName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answer: answer })
+            })
+            .then(() => {
+                modal.style.display = 'none';  // Sluit modal na submit
+                checkStatus();  // Check status opnieuw
+            })
+            .catch(error => console.error('Input send failed:', error));
+        });
+    });
+</script>
 {% endblock %}

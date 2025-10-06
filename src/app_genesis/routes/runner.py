@@ -4,7 +4,15 @@ from pathlib import Path
 
 from ansi2html import Ansi2HTMLConverter
 from configs_registry import ConfigRegistry
-from flask import Blueprint, Response, jsonify, render_template, request
+from flask import (
+    Blueprint,
+    Response,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 
 runner = Blueprint("runner", __name__)
 
@@ -14,19 +22,8 @@ config_registry = ConfigRegistry()
 outputs = {}  # filename: {'lines': [], 'prompt': None, 'awaiting': False, 'lock': threading.Lock()}
 
 
-@runner.route("/start/<filename>")
+@runner.route("/start/<filename>", methods=['POST'])
 def start(filename: str) -> Response:
-    """Start de GenesisRunner voor het opgegeven configuratiebestand.
-
-    Als de runner inactief of afgerond is, wordt deze gereset en opnieuw gestart. Verzamelt uitvoerregels en handelt prompts af.
-    Geeft een JSON-respons terug die aangeeft of de run is gestart of al actief is.
-
-    Args:
-        filename: De naam van het te draaien configuratiebestand.
-
-    Returns:
-        Response: Een Flask JSON-respons met de status van de run.
-    """
     runner = config_registry.get_config_runner(filename)
     if filename not in outputs:
         outputs[filename] = {
@@ -46,10 +43,13 @@ def start(filename: str) -> Response:
         runner.start()
 
         def collector():
+            """Verzamelt uitvoerregels van de GenesisRunner en detecteert prompts.
+            # ... (bestaande collector-code)
+            """
             for line in runner.stream_output():
                 with outputs[filename]["lock"]:
                     outputs[filename]["lines"].append(line)
-                    if any(["doorgaan" in line.lower(), "antwoorden" in line.lower()]):
+                    if any(["doorgaan" in line.lower(), "antwoorden" in line.lower(), "?" in line]):
                         outputs[filename]["prompt"] = line.strip()
                         outputs[filename]["awaiting"] = True
                     if "Afgerond" in line:
@@ -57,14 +57,17 @@ def start(filename: str) -> Response:
             # After stream ends, ensure status updates
 
         threading.Thread(target=collector, daemon=True).start()
-        return jsonify({"status": "started"})
+
+        # Redirect naar de output-pagina
+        return redirect(url_for('runner.show_output', filename=filename))
     else:
-        return jsonify({"status": "already_running"}), 400
+        # Optioneel: redirect ook hier
+        return redirect(url_for('runner.show_output', filename=filename)), 400  # Of behoud jsonify als je wilt
 
 
 @runner.route("/show-output/<filename>")
 def show_output(filename):
-    return render_template("runner.html", filename=filename)
+    return render_template("runner.html", config=filename)
 
 
 @runner.route("/stream/<filename>")

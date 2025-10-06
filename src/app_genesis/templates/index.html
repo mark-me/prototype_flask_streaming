@@ -99,19 +99,12 @@
                         <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
                             <i class="bi bi-pencil"></i> Bewerken
                         </a>
-                        <a href="{{ url_for('runner.start', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-success run-btn
-                            {% if cfg.status == 'running' %} disabled{% endif %}"
-                            id="run-btn-{{ loop.index }}"
-                            data-filename="{{ cfg.path_config }}">
-                            <div class="spinner-border spinner-border-sm text-light"
-                                role="status"
-                                id="spinner-{{ loop.index }}"
-                                style="display:{{ 'inline-block' if cfg.status == 'running' else 'none' }}">
-                                <span class="sr-only"></span>
-                            </div>
-                            <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
-                            <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
+                        <form action="/runner/start/{{ cfg.path_config }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
+                                <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
                             Uitvoeren
+                            </button>
                         </a>
                         {% if cfg.exists_output %}
                             <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
