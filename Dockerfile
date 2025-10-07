@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Genesis installeren
-COPY genesis ./genesis
+COPY app ./app
 COPY pyproject.toml .
 RUN pip install .
 
