@@ -152,7 +152,7 @@
     {% endblock %}
 
     {% block scripts %}
-        <script src="/static/js/modal.js" defer></script>
+        <script type="module" src="{{ url_for('static', filename='js/modal.js') }}"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 if (typeof setupModalCleanup === 'function') {

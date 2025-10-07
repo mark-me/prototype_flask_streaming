@@ -1,22 +1,38 @@
+// modal.js – Globale versie (geen exports)
 let modalInstance = null;
 let pollInterval = null;
-let broadcastChannel = null;  // Nieuw: voor inter-tab communicatie
-let isFocused = true;  // Nieuw: track focus status van dit tabblad
+let broadcastChannel = null;
+let isFocused = true;
 
-// ... (bestaande functies: startPolling, stopPolling blijven ongewijzigd)
+function startPolling(statusUrl, onStatusUpdate, pollTime = 1000) {
+    stopPolling();
+    pollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(statusUrl);
+            if (!response.ok) {
+                throw new Error('Polling failed');
+            }
+            const data = await response.json();
+            onStatusUpdate(data);
+        } catch (err) {
+            console.error('Error during polling:', err);
+        }
+    }, pollTime);
+}
 
-/**
- * Initialiseert de BroadcastChannel en focus-listeners voor tab-synchronisatie.
- * Roep dit aan in DOMContentLoaded op elke pagina.
- */
-export function initTabSync() {
-    // Maak een channel voor modal-events (uniek per app)
+function stopPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+    }
+}
+
+function initTabSync() {
     broadcastChannel = new BroadcastChannel('genesis-modal-channel');
 
-    // Detecteer wanneer dit tabblad focus krijgt/verliest
     window.addEventListener('focus', () => {
         isFocused = true;
-        // Broadcast dat dit tabblad nu focused is
+        console.log('TAB FOCUS GEKREGEN – isFocused = true');  // <-- Nieuwe log
         if (broadcastChannel) {
             broadcastChannel.postMessage({ type: 'tab-focused', tabId: getTabId() });
         }
@@ -24,29 +40,34 @@ export function initTabSync() {
 
     window.addEventListener('blur', () => {
         isFocused = false;
+        console.log('TAB BLUR – isFocused = false');  // <-- Nieuwe log
     });
 
-    // Luister naar broadcasts van andere tabs
+    // Initial focus check
+    if (document.hasFocus()) {
+        isFocused = true;
+        console.log('Initial: TAB IS FOCUSED');
+    } else {
+        console.log('Initial: TAB IS NOT FOCUSED');
+    }
+
     if (broadcastChannel) {
         broadcastChannel.addEventListener('message', (event) => {
             const { type, tabId } = event.data;
+            console.log('Broadcast ontvangen:', type, 'van tab', tabId);  // <-- Log
             if (type === 'show-modal' && isFocused && tabId !== getTabId()) {
-                // Alleen tonen als dit tabblad focused is EN niet de sender
+                console.log('Toon modal via broadcast (focused)');
                 showModal(event.data.filename, event.data.promptText);
             } else if (type === 'tab-focused') {
-                // Update lokale focus als een ander tabblad focus claimt
                 if (tabId !== getTabId()) {
                     isFocused = false;
+                    console.log('Ander tab focused – zet isFocused = false');
                 }
             }
         });
     }
 }
 
-/**
- * Genereert een unieke ID voor dit tabblad (gebaseerd op timestamp + random).
- * Gebruikt voor onderscheid in broadcasts.
- */
 function getTabId() {
     if (!window.genesisTabId) {
         window.genesisTabId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -54,18 +75,13 @@ function getTabId() {
     return window.genesisTabId;
 }
 
-/**
- * Uitgebreide showModal: checkt focus en broadcast als nodig.
- * Args: dezelfde als voorheen, plus optioneel { broadcast: true } om naar andere tabs te sturen.
- */
-export function showModal(filename, promptText, options = {}) {
+function showModal(filename, promptText, options = {}) {
     const modalEl = document.getElementById('inputModal');
     if (!modalEl) {
         console.error('Modal element not found!');
         return;
     }
 
-    // Als broadcast gewenst, stuur naar alle tabs (maar toon lokaal alleen als focused)
     if (options.broadcast && broadcastChannel) {
         broadcastChannel.postMessage({
             type: 'show-modal',
@@ -73,14 +89,12 @@ export function showModal(filename, promptText, options = {}) {
             promptText,
             tabId: getTabId()
         });
-        // Toon lokaal alleen als dit tabblad focused is
         if (!isFocused) {
             console.log('Modal event broadcast, maar dit tabblad is niet focused.');
-            return;  // Skip lokale show
+            return;
         }
     }
 
-    // Normale show-logica (als niet broadcast of lokaal focused)
     if (!modalInstance) {
         modalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
     }
@@ -90,10 +104,32 @@ export function showModal(filename, promptText, options = {}) {
     modalInstance.show();
 }
 
-// ... (bestaande functies: sendModalInput, hideModal, setupModalCleanup blijven ongewijzigd)
+async function sendModalInput(filename, answer, postUrl) {
+    try {
+        const response = await fetch(`${postUrl}/${filename}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answer })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to send input');
+        }
+        const data = await response.json();
+        hideModal();
+        return data;
+    } catch (err) {
+        console.error('Error sending modal input:', err);
+        hideModal();
+    }
+}
 
-// Update setupModalCleanup om ook tab-sync te initialiseren
-export function setupModalCleanup() {
+function hideModal() {
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+}
+
+function setupModalCleanup() {
     const modalElement = document.getElementById('inputModal');
     if (modalElement) {
         modalElement.addEventListener('hidden.bs.modal', () => {
@@ -103,6 +139,13 @@ export function setupModalCleanup() {
             }
         });
     }
-    // Nieuw: Initialiseer tab-sync
-    initTabSync();
+    initTabSync();  // Initialiseer tab-sync
 }
+
+// Maak alle functies globaal beschikbaar
+window.startPolling = startPolling;
+window.stopPolling = stopPolling;
+window.showModal = showModal;
+window.sendModalInput = sendModalInput;
+window.hideModal = hideModal;
+window.setupModalCleanup = setupModalCleanup;
