@@ -154,22 +154,66 @@
     {% block scripts %}
         <script type="module" src="{{ url_for('static', filename='js/modal.js') }}"></script>
         <script>
+            // Globale sendInput-functie voor de Ja/Nee-knoppen (gebruik sendModalInput erachter)
+            window.sendInput = function(answer) {
+                const configFile = document.getElementById('config')?.dataset.filename || '{{ config }}';
+                if (typeof sendModalInput === 'function') {
+                    sendModalInput(configFile, answer, '/runner/input');  // Post naar backend
+                    console.log('Quick input verstuurd:', answer);
+                } else {
+                    console.error('sendModalInput niet gevonden!');
+                }
+            };
+
             document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM geladen – check modal.js...');
+
+                // Initialiseer modal-setup
                 if (typeof setupModalCleanup === 'function') {
                     setupModalCleanup();
+                    console.log('Modal cleanup geïnitialiseerd.');
+                } else {
+                    console.error('setupModalCleanup niet gevonden!');
                 }
 
-                // Start polling voor ALLE configs (voor overzicht)
+                // Huidige config ophalen
+                const configFile = document.getElementById('config')?.dataset.filename || '{{ config }}';
+                console.log('Config file:', configFile);
+
+                // Anti-duplicate: Track of modal al getoond voor deze prompt
+                let lastPromptHash = null;
+
+                // Start polling (met extra logs en fixes)
                 if (typeof startPolling === 'function') {
+                    console.log('Start polling op /runner/status...');
                     startPolling('/runner/status', function(statusData) {
-                        // Loop over configs en trigger modal als awaiting_input
-                        Object.keys(statusData).forEach(filename => {
-                            const status = statusData[filename];
-                            if (status && status.status === 'awaiting_input' && status.prompt) {
-                                showModal(filename, status.prompt, { broadcast: true });
+                        console.log('Polling update:', statusData);
+                        if (configFile && statusData[configFile]) {
+                            const status = statusData[configFile];
+                            console.log('Status voor', configFile, ':', status);
+
+                            // Clean ANSI-codes uit prompt (verwijder \x1B[...m)
+                            let cleanPrompt = status.prompt || '';
+                            if (cleanPrompt) {
+                                cleanPrompt = cleanPrompt.replace(/\x1B\[[0-9;]*m/g, '').trim();  // Strip ANSI
+                                console.log('Gecleaned prompt:', cleanPrompt);
                             }
-                        });
-                    });
+
+                            if (status.status === 'awaiting_input' && cleanPrompt) {
+                                // Anti-duplicate: Hash de prompt om te checken of het nieuw is
+                                const promptHash = btoa(cleanPrompt).slice(0, 10);  // Simple hash
+                                if (promptHash !== lastPromptHash) {
+                                    lastPromptHash = promptHash;
+                                    console.log('Nieuwe prompt gedetecteerd! Toon modal...');
+                                    showModal(configFile, cleanPrompt, { broadcast: false });  // <-- Tijdelijk false voor test
+                                } else {
+                                    console.log('Prompt al getoond, skip...');
+                                }
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    console.error('startPolling niet gevonden!');
                 }
             });
         </script>
