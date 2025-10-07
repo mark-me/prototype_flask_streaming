@@ -2,9 +2,8 @@
 {% block title %}Genesis draait{% endblock %}
 
 {% block content %}
-    <h1>Genesis draait met <code>{{ config }}</code></h1>
-
     <div id="config" data-filename="{{ config }}"></div>
+    <h1>Genesis draait met <code>{{ config }}</code></h1>
 
     <div class="card mt-3">
         <div class="card-body console-box" id="console"></div>
@@ -27,29 +26,35 @@
 
 {% block scripts %}
     <script src="{{ url_for('static', filename='js/runner.js') }}"></script>
-    <script type="module">
-        import { startPolling, stopPolling, showModal, sendModalInput, setupModalCleanup }
-        from "{{ url_for('static', filename='js/modal.js') }}";
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!document.getElementById('inputModal')) {
-                console.warn('Modal element ontbreekt, polling zal doorgaan zonder modal.');
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialiseer modal met tab-sync
+            if (typeof setupModalCleanup === 'function') {
+                setupModalCleanup();
             }
 
-            setupModalCleanup();
-
-            function updateRunnerStatus(data) {
-                if (data.awaiting_input) {
-                    showModal(data.filename, data.prompt);
-                }
+            // Haal de huidige config-filename op (uit de template)
+            const configFile = document.getElementById('config').dataset.filename;
+            if (!configFile) {
+                console.error('Geen config-filename gevonden!');
+                return;
             }
 
-            startPolling('/runner/status', updateRunnerStatus, 1000);
+            // Start polling voor status-updates (elke 1s)
+            if (typeof startPolling === 'function') {
+                startPolling('/runner/status', function(statusData) {
+                    const status = statusData[configFile];
+                    if (status && status.status === 'awaiting_input' && status.prompt) {
+                        // Trigger modal alleen op focused tab (via broadcast)
+                        if (typeof showModal === 'function') {
+                            showModal(configFile, status.prompt, { broadcast: true });
+                        }
+                    }
+                });
+            }
 
-            window.sendInput = (answer) => {
-                const filename = document.getElementById('modal-filename').innerText;
-                sendModalInput(filename, answer, '/runner/input');
-            };
+            // Bestaande runner.js initialisatie (SSE voor console) gebeurt al via defer
         });
     </script>
 {% endblock %}

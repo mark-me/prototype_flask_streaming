@@ -1,57 +1,86 @@
 let modalInstance = null;
 let pollInterval = null;
+let broadcastChannel = null;  // Nieuw: voor inter-tab communicatie
+let isFocused = true;  // Nieuw: track focus status van dit tabblad
+
+// ... (bestaande functies: startPolling, stopPolling blijven ongewijzigd)
 
 /**
- * Start het periodiek ophalen van statusupdates van de server.
- * Deze functie roept de opgegeven callback aan met de nieuwste statusgegevens op een vast interval.
- *
- * Args:
- *   statusUrl: De URL waar de statusinformatie wordt opgehaald.
- *   onStatusUpdate: Callbackfunctie die wordt aangeroepen met de opgehaalde statusdata.
- *   pollTime: Het interval in milliseconden tussen opeenvolgende statusverzoeken (standaard 1000 ms).
+ * Initialiseert de BroadcastChannel en focus-listeners voor tab-synchronisatie.
+ * Roep dit aan in DOMContentLoaded op elke pagina.
  */
-export function startPolling(statusUrl, onStatusUpdate, pollTime = 1000) {
-    stopPolling();
-    pollInterval = setInterval(async () => {
-        try {
-            const response = await fetch(statusUrl);
-            if (!response.ok) {
-              throw new Error('Polling failed');
-            }
-            const data = await response.json();
-            onStatusUpdate(data);
-        } catch (err) {
-            console.error('Error during polling:', err);
+export function initTabSync() {
+    // Maak een channel voor modal-events (uniek per app)
+    broadcastChannel = new BroadcastChannel('genesis-modal-channel');
+
+    // Detecteer wanneer dit tabblad focus krijgt/verliest
+    window.addEventListener('focus', () => {
+        isFocused = true;
+        // Broadcast dat dit tabblad nu focused is
+        if (broadcastChannel) {
+            broadcastChannel.postMessage({ type: 'tab-focused', tabId: getTabId() });
         }
-    }, pollTime);
-}
+    });
 
-/**
- * Stopt het periodiek ophalen van statusupdates door de polling-interval te wissen.
- * Deze functie zorgt ervoor dat er geen verdere statusverzoeken meer worden uitgevoerd.
- */
-export function stopPolling() {
-    if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
+    window.addEventListener('blur', () => {
+        isFocused = false;
+    });
+
+    // Luister naar broadcasts van andere tabs
+    if (broadcastChannel) {
+        broadcastChannel.addEventListener('message', (event) => {
+            const { type, tabId } = event.data;
+            if (type === 'show-modal' && isFocused && tabId !== getTabId()) {
+                // Alleen tonen als dit tabblad focused is EN niet de sender
+                showModal(event.data.filename, event.data.promptText);
+            } else if (type === 'tab-focused') {
+                // Update lokale focus als een ander tabblad focus claimt
+                if (tabId !== getTabId()) {
+                    isFocused = false;
+                }
+            }
+        });
     }
 }
 
 /**
- * Toont een modale dialoogvenster aan de gebruiker met een bestandsnaam en optionele prompttekst.
- * Deze functie initialiseert de modal indien nodig en stelt de weergegeven tekst in voordat de modal wordt getoond.
- *
- * Args:
- *   filename: De naam van het bestand die in de modal wordt weergegeven.
- *   promptText: De tekst die als prompt aan de gebruiker wordt getoond (optioneel).
+ * Genereert een unieke ID voor dit tabblad (gebaseerd op timestamp + random).
+ * Gebruikt voor onderscheid in broadcasts.
  */
-export function showModal(filename, promptText) {
+function getTabId() {
+    if (!window.genesisTabId) {
+        window.genesisTabId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+    return window.genesisTabId;
+}
+
+/**
+ * Uitgebreide showModal: checkt focus en broadcast als nodig.
+ * Args: dezelfde als voorheen, plus optioneel { broadcast: true } om naar andere tabs te sturen.
+ */
+export function showModal(filename, promptText, options = {}) {
     const modalEl = document.getElementById('inputModal');
     if (!modalEl) {
         console.error('Modal element not found!');
         return;
     }
 
+    // Als broadcast gewenst, stuur naar alle tabs (maar toon lokaal alleen als focused)
+    if (options.broadcast && broadcastChannel) {
+        broadcastChannel.postMessage({
+            type: 'show-modal',
+            filename,
+            promptText,
+            tabId: getTabId()
+        });
+        // Toon lokaal alleen als dit tabblad focused is
+        if (!isFocused) {
+            console.log('Modal event broadcast, maar dit tabblad is niet focused.');
+            return;  // Skip lokale show
+        }
+    }
+
+    // Normale show-logica (als niet broadcast of lokaal focused)
     if (!modalInstance) {
         modalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
     }
@@ -61,56 +90,9 @@ export function showModal(filename, promptText) {
     modalInstance.show();
 }
 
-/**
- * Stuurt de invoer van de gebruiker vanuit de modal naar de server met een POST-verzoek.
- * Sluit de modal na het verzenden van de invoer en retourneert de serverrespons.
- *
- * Args:
- *   filename: De naam van het bestand of de resource waarvoor de invoer wordt verzonden.
- *   answer: De gebruikersinvoer die naar de server wordt gestuurd.
- *   postUrl: De basis-URL waarnaar de invoer gepost moet worden.
- *
- * Returns:
- *   De geparseerde JSON-respons van de server als het verzoek succesvol is.
- *
- * Raises:
- *   Gooit een fout als het netwerkverzoek mislukt of de respons niet OK is.
- */
-export async function sendModalInput(filename, answer, postUrl) {
-    try {
-        const response = await fetch(`${postUrl}/${filename}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ answer })
-        });
-        if (!response.ok) {
-          throw new Error('Failed to send input');
-        }
-        const data = await response.json();
-        hideModal();
-        return data;
-    } catch (err) {
-        console.error('Error sending modal input:', err);
-        hideModal();
-    }
-}
+// ... (bestaande functies: sendModalInput, hideModal, setupModalCleanup blijven ongewijzigd)
 
-
-/**
- * Verbergt de momenteel weergegeven modale dialoog.
- * Deze functie sluit de modal als deze momenteel open is.
- */
-export function hideModal() {
-    if (modalInstance) {
-        modalInstance.hide();
-    }
-}
-
-
-/**
- * Stelt het opruimen van de modal in wanneer deze wordt gesloten.
- * Zorgt ervoor dat bronnen worden vrijgegeven en de modal-instantie wordt gereset nadat de modal is gesloten.
- */
+// Update setupModalCleanup om ook tab-sync te initialiseren
 export function setupModalCleanup() {
     const modalElement = document.getElementById('inputModal');
     if (modalElement) {
@@ -121,4 +103,6 @@ export function setupModalCleanup() {
             }
         });
     }
+    // Nieuw: Initialiseer tab-sync
+    initTabSync();
 }

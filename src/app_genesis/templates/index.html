@@ -152,27 +152,25 @@
     {% endblock %}
 
     {% block scripts %}
-    <script type="module">
-        import { startPolling, stopPolling, showModal, sendModalInput, setupModalCleanup } from "{{ url_for('static', filename='js/modal.js') }}";
-
-        setupModalCleanup();
-
-        function updateStatuses(data) {
-            for (const filename in data) {
-                const stat = data[filename].status;
-                if (stat === 'awaiting_input') {
-                    showModal(filename, data[filename].prompt);
+        <script src="/static/js/modal.js" defer></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof setupModalCleanup === 'function') {
+                    setupModalCleanup();
                 }
-            }
-        }
 
-        startPolling('/runner/status', updateStatuses, 1000);
-
-        window.sendInput = (answer) => {
-            const filename = document.getElementById('modal-filename').innerText;
-            sendModalInput(filename, answer, '/runner/input').then(() => {
-                // opnieuw ophalen na input
+                // Start polling voor ALLE configs (voor overzicht)
+                if (typeof startPolling === 'function') {
+                    startPolling('/runner/status', function(statusData) {
+                        // Loop over configs en trigger modal als awaiting_input
+                        Object.keys(statusData).forEach(filename => {
+                            const status = statusData[filename];
+                            if (status && status.status === 'awaiting_input' && status.prompt) {
+                                showModal(filename, status.prompt, { broadcast: true });
+                            }
+                        });
+                    });
+                }
             });
-        };
-    </script>
+        </script>
     {% endblock %}

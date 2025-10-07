@@ -152,9 +152,11 @@ def send_input(filename):
         Response: Een Flask JSON-respons die bevestigt dat de invoer is verzonden.
     """
     answer = request.json.get("answer")
+    if not answer:
+        return jsonify({"error": "Geen antwoord opgegeven"}), 400
     runner = config_registry.get_config_runner(filename)
     runner.send_input(answer)
     with outputs[filename]["lock"]:
         outputs[filename]["awaiting"] = False
         outputs[filename]["prompt"] = None
-    return jsonify({"status": "sent"})
+    return jsonify({"status": "sent", "message": "Invoer verwerkt"})
