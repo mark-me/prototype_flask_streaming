@@ -15,7 +15,7 @@ LOGGING = {
         "tqdm_stdout": {
             "class": "logtools.tqdm_logging.TqdmLoggingHandler",  # Gebruik het juiste pad
             "formatter": "colored",
-            "level": "DEBUG",  # of een andere drempel
+            "level": "WARNING",  # of een andere drempel
         },
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
