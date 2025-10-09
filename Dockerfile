@@ -6,10 +6,12 @@ WORKDIR /app
 
 # Dependencies installeren
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+#RUN pip install --no-cache-dir -r requirements.txt
 
 # Genesis installeren
-COPY app ./app
+COPY config ./config
+COPY logtools ./logtools
+COPY genesis.py ./genesis.py
 COPY pyproject.toml .
 RUN pip install .
 
@@ -17,7 +19,7 @@ RUN pip install .
 COPY . .
 
 # Zorg dat output directory bestaat
-RUN mkdir -p /app/output /app/configs
+RUN mkdir -p /output /configs
 
 # Flask draait op poort 5000
 EXPOSE 5000
