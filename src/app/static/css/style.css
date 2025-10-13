@@ -1,88 +1,98 @@
-      body {
-          padding-top: 70px;
-      }
+body {
+    padding-top: 0px;
+}
 
-      .hover-shadow:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-          transition: all 0.2s ease-in-out;
-      }
+.action-btn {
+    height: 32px;
+    line-height: 1.5;
+    border-radius: 0.25rem !important;
+    padding: 0.25rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 
-      .hover-underline {
-          font-size: 2rem;
-          color: #ffffff;
-          position: relative;
-          display: inline-block;
-      }
+.hover-shadow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease-in-out;
+}
 
-      .hover-underline::after,
-      .hover-underline::before {
-          content: '';
-          position: absolute;
-          width: 100%;
-          height: 2px;
-          background: linear-gradient(to right, #ff0000, #00ffff);
-          bottom: -5px;
-          left: 0;
-          transform: scaleX(0);
-          transform-origin: right;
-          transition: transform 0.4s ease-out;
-      }
+.hover-underline {
+    font-size: 2rem;
+    color: #ffffff;
+    position: relative;
+    display: inline-block;
+}
 
-      .hover-underline::before {
-          top: -5px;
-          transform-origin: left;
-      }
+.hover-underline::after,
+.hover-underline::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #ff0000, #00ffff);
+    bottom: -5px;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.4s ease-out;
+}
 
-      .hover-underline:hover::after,
-      .hover-underline:hover::before {
-          transform: scaleX(1);
-      }
+.hover-underline::before {
+    top: -5px;
+    transform-origin: left;
+}
 
-      .console-box {
-          background: repeating-linear-gradient(to bottom, rgba(0, 255, 0, 0.05) 0px, rgba(0, 255, 0, 0.05) 2px, transparent 2px, transparent 4px), #000;
-          color: #00ff00;
-          text-shadow: 0 0 10px #00ff00;
-          filter: blur(0.5px);
-          font-family: 'Courier New', monospace;
-          font-size: 14px;
-          padding: 1rem;
-          height: 500px;
-          overflow-y: auto;
-          white-space: pre-wrap;
+.hover-underline:hover::after,
+.hover-underline:hover::before {
+    transform: scaleX(1);
+}
 
-          /* Monitor border */
-          border: 12px solid #222;
-          border-radius: 20px;
-          background-clip: padding-box;
+.console-box {
+    background: repeating-linear-gradient(to bottom, rgba(0, 255, 0, 0.05) 0px, rgba(0, 255, 0, 0.05) 2px, transparent 2px, transparent 4px), #000;
+    color: #00ff00;
+    text-shadow: 0 0 10px #00ff00;
+    filter: blur(0.5px);
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    padding: 1rem;
+    height: 550px;
+    overflow-y: auto;
+    white-space: pre-wrap;
 
-          box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.08),
-              /* subtle highlight top */
-              inset 0 -2px 4px rgba(0, 0, 0, 0.8),
-              /* Deep shadow bottom */
-              0 4px 12px rgba(0, 0, 0, 0.7),
-              /* Heavy drop shadow */
-              0 0 10px rgba(0, 255, 0, 0.1);
-          /* Very light glow */
+    /* Monitor border */
+    border: 12px solid #222;
+    border-radius: 20px;
+    background-clip: padding-box;
 
-          background-origin: border-box;
+    box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.08),
+        /* subtle highlight top */
+        inset 0 -2px 4px rgba(0, 0, 0, 0.8),
+        /* Deep shadow bottom */
+        0 4px 12px rgba(0, 0, 0, 0.7),
+        /* Heavy drop shadow */
+        0 0 10px rgba(0, 255, 0, 0.1);
+    /* Very light glow */
 
-          /* Scanline effect */
-          background-size: 100% 4px;
-          /* Each scanline is 4px tall */
-          background-position: 0 2px;
-          /* Offset to make lines evenly spaced */
+    background-origin: border-box;
 
-          /* Adding curvature effect */
-          perspective: 400px;
-          /* Controls the depth of the 3D effect */
-          transform: rotateX(5deg);
-          /* Slight rotation on the X-axis to simulate curve */
-          transform-origin: center;
-          /* Ensures the curve happens from the center */
-      }
+    /* Scanline effect */
+    background-size: 100% 4px;
+    /* Each scanline is 4px tall */
+    background-position: 0 2px;
+    /* Offset to make lines evenly spaced */
 
-      .navbar-brand img {
-          height: 40px;
-          margin-right: 10px;
-      }
+    /* Adding curvature effect */
+    perspective: 400px;
+    /* Controls the depth of the 3D effect */
+    transform: rotateX(5deg);
+    /* Slight rotation on the X-axis to simulate curve */
+    transform-origin: center;
+    /* Ensures the curve happens from the center */
+}
+
+.navbar-brand img {
+    height: 40px;
+    margin-right: 10px;
+}

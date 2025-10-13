@@ -92,30 +92,30 @@
                 {% for cfg in configs %}
                 <tr id="row-{{ loop.index }}">
                     <td>
-                    <i class="bi bi-filetype-yml"></i> {{ cfg.path_config }}
+                    <i class="bi bi-filetype-yml me-2"></i> {{ cfg.path_config }}
                     </td>
                     <td>
                         <div id="action-{{ cfg.path_config }}" class="d-flex gap-2">
-                            <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning">
-                                <i class="bi bi-pencil"></i> Bewerken
+                            <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning action-btn">
+                                <i class="bi bi-pencil me-2"></i> Bewerken
                             </a>
-                            <form action="/runner/start/{{ cfg.path_config }}" method="POST" style="display: inline;">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-play" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
-                                    <i class="bi bi-check-circle" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
-                                Uitvoeren
+                            <form action="/runner/start/{{ cfg.path_config }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-success action-btn">
+                                    <i class="bi bi-play me-2" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
+                                    <i class="bi bi-check-circle me-2" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
+                                    Uitvoeren
                                 </button>
-                            </a>
+                            </form>
                             {% if cfg.exists_output %}
-                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-search"></i> Resultaten
+                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary action-btn">
+                                    <i class="bi bi-search me-2"></i> Resultaten
                                 </a>
                             {% else %}
-                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled">
-                                    <i class="bi bi-search"></i> Resultaten
+                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled action-btn">
+                                    <i class="bi bi-search me-2"></i> Resultaten
                                 </a>
                             {% endif %}
-                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
+                            <button class="btn btn-sm btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
