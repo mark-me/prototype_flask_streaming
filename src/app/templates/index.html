@@ -115,7 +115,7 @@
                                     <i class="bi bi-search me-2"></i> Resultaten
                                 </a>
                             {% endif %}
-                            <button class="btn btn-sm btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
+                            <button class="btn btn-sm btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal" data-filename="{{ cfg.path_config }}">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -147,7 +147,8 @@
         </div>
     </div>
 
-    {% include "_modal.html" %}
+    {% include "_modal_continue_run.html" %}
+    {% include "_modal_config_delete.html" %}
 
     {% endblock %}
 
@@ -215,6 +216,20 @@
                 } else {
                     console.error('startPolling niet gevonden!');
                 }
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const deleteModal = document.getElementById('deleteModal');
+                deleteModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget; // Button that triggered the modal
+                    const filename = button.getAttribute('data-filename'); // Get filename
+                    const configName = document.getElementById('configName'); // Element to show filename
+                    const deleteForm = document.getElementById('deleteForm'); // Form element
+                    // Update modal content
+                    configName.textContent = filename;
+                    deleteForm.action = `/configs/delete/${filename}`; // Set form action
+                });
             });
         </script>
     {% endblock %}

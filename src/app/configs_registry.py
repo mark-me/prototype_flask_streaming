@@ -3,30 +3,20 @@ from datetime import datetime
 from pathlib import Path
 
 from genesis_runner import GenesisRunner
-
 from config import GenesisConfig
 from logtools import get_logger
 
 logger = get_logger(__name__)
 
 class ConfigRegistry:
-    """Beheert het register van configuratiebestanden en hun metadata.
-
-    Deze klasse implementeert een singleton die configuratiebestanden opspoort, registreert en bijwerkt.
-    """
+    """Beheert het register van configuratiebestanden en hun metadata."""
     _instance = None
     CONFIG_DIR = Path("configs").resolve()
     _lock = threading.Lock()
     statuses = {}  # {filename: 'idle' | 'running' | 'finished'}
 
     def __new__(cls):
-        """Maakt een thread-safe singleton-instantie van het configuratieregister aan.
-
-        Deze methode zorgt ervoor dat er slechts één instantie van het register bestaat en initialiseert de configuraties.
-
-        Returns:
-            ConfigRegistry: De singleton-instantie van het configuratieregister.
-        """
+        """Maakt een thread-safe singleton-instantie van het configuratieregister aan."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -36,14 +26,7 @@ class ConfigRegistry:
 
     @classmethod
     def init_configs(cls):
-        """Initialiseert en retourneert een dictionary van configuratiebestanden en hun metadata.
-
-        Deze methode doorzoekt de configuratiemap naar YAML-bestanden en verzamelt relevante informatie voor elk bestand.
-
-        Returns:
-            dict: Een dictionary waarbij elke sleutel een configuratiebestandsnaam is en elke waarde een dictionary bevat
-                met het pad, de uitvoermap, de status van het uitvoerbestand, aanmaak- en wijzigingsdatum, en een runner-instantie.
-        """
+        """Initialiseert en retourneert een dictionary van configuratiebestanden en hun metadata."""
         paths_config = [
             f
             for f in cls.CONFIG_DIR.iterdir()
@@ -63,60 +46,53 @@ class ConfigRegistry:
             }
         return result
 
+    def refresh(self):
+        """Ververst de configuratie dictionary door de config map opnieuw te scannen."""
+        with self._lock:
+            self.configs = self.init_configs()
+            logger.info("Config registry refreshed.")
+
+    def delete(self, filename: str):
+        """Verwijdert een configuratiebestand uit het register."""
+        with self._lock:
+            if filename in self.configs:
+                del self.configs[filename]
+                if filename in self.statuses:
+                    del self.statuses[filename]
+                logger.info(f"Configuratiebestand {filename} verwijderd uit register.")
+            else:
+                logger.warning(f"Configuratiebestand {filename} niet gevonden in register.")
+
     def get_configs(self) -> list[dict]:
         return self.configs.values()
 
     def get_config(self, filename: str) -> dict:
-        """Haalt de configuratie-informatie op voor een opgegeven bestandsnaam.
-
-        Deze methode retourneert de metadata en runner-instantie van het gevraagde configuratiebestand.
-
-        Args:
-            filename (str): De naam van het configuratiebestand.
-
-        Returns:
-            dict: De configuratiegegevens voor het opgegeven bestand, of None als het niet bestaat.
-        """
+        """Haalt de configuratie-informatie op voor een opgegeven bestandsnaam."""
         return self.configs.get(filename)
 
     def get_config_runner(self, filename: str) -> GenesisRunner | None:
-        """Geeft de GenesisRunner-instantie terug voor een opgegeven configuratiebestand.
-
-        Deze methode haalt de runner op die gekoppeld is aan het gevraagde configuratiebestand.
-
-        Args:
-            filename (str): De naam van het configuratiebestand.
-
-        Returns:
-            GenesisRunner | None: De runner-instantie voor het opgegeven bestand, of None als het niet bestaat.
-        """
+        """Geeft de GenesisRunner-instantie terug voor een opgegeven configuratiebestand."""
         config = self.configs.get(filename)
-        return config.get("runner")
+        return config.get("runner") if config else None
 
     def update_status(self, filename, status):
         self.statuses[filename] = status
 
     def config_runner_status(self, filename: str) -> str | None:
         config = self.configs.get(filename)
-        runner = config.get("runner")
-        return runner.status()
+        if config:
+            runner = config.get("runner")
+            return runner.status() if runner else None
+        return None
 
     def add(self, file_config: str) -> None:
-        """Voegt een nieuw configuratiebestand toe aan het register als het bestaat.
-
-        Deze methode controleert of het opgegeven bestand aanwezig is en werkt het register bij met de nieuwe configuratie.
-
-        Args:
-            file_config (str): De naam van het toe te voegen configuratiebestand.
-        """
+        """Voegt een nieuw configuratiebestand toe aan het register als het bestaat."""
         with self._lock:
             path_config = self.CONFIG_DIR / file_config
             if not path_config.exists():
                 logger.error(f"Configuratiebestand {file_config} bestaat niet.")
                 return
-            genesis_config = GenesisConfig(
-                file_config=path_config, create_version_dir=False
-            )
+            genesis_config = GenesisConfig(file_config=path_config, create_version_dir=False)
             self.configs.update(
                 {
                     path_config.name: {
@@ -129,14 +105,7 @@ class ConfigRegistry:
                     }
                 }
             )
+            logger.info(f"Configuratiebestand {file_config} toegevoegd aan register.")
 
     def get_status_all(self) -> list[dict]:
         return list(self.configs.values())
-
-
-if __name__ == "__main__":
-    config_registry = ConfigRegistry()
-    lst_config = config_registry.get_status_all()
-    print(config_registry.configs)
-    config_registry.add(file_config="config3.yaml")
-    print(config_registry.configs)
