@@ -195,7 +195,7 @@ def config_new():
 
     if request.method == "POST":
         return handle_config_new_post(configs)
-    return render_template("config_new.html", configs=configs)
+    return render_template("config_handler/config_new.html", configs=configs)
 
 
 def handle_config_new_post(configs: list):
@@ -228,7 +228,7 @@ def handle_config_new_post(configs: list):
             "success",
         )
         return redirect(url_for("config_edit", filename=new_name))
-    return render_template("config_new.html", configs=configs)
+    return render_template("config_handler/config_new.html", configs=configs)
 
 def get_sorted_config_names():
     """Geeft een alfabetisch gesorteerde lijst van configuratiebestandsnamen terug.
