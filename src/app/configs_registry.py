@@ -35,7 +35,7 @@ class ConfigRegistry:
 
         Zet de status- en configuratieregisters op bij het aanmaken van de instantie.
         """
-        self.statuses = {}  # Initialize here instead
+        self.statuses = {}
         self.configs = self.init_configs()
 
     @classmethod
@@ -184,7 +184,8 @@ class ConfigRegistry:
     def add(self, file_config: str) -> None:
         """Voegt een nieuw configuratiebestand toe aan het register.
 
-        Controleert of het opgegeven bestand bestaat en voegt het toe aan het configuratieregister met bijbehorende metadata. Logt waarschuwingen of fouten als het bestand niet gevonden of niet toegankelijk is.
+        Controleert of het opgegeven bestand bestaat en voegt het toe aan het configuratieregister met bijbehorende metadata.
+        Logt waarschuwingen of fouten als het bestand niet gevonden of niet toegankelijk is.
 
         Args:
             file_config: De naam van het toe te voegen configuratiebestand.
