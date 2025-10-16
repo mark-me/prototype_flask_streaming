@@ -53,6 +53,10 @@ def start(filename: str) -> Response:
         runner.start()
 
         def collector():
+            """Verzamelt uitvoer van de GenesisRunner en verwerkt prompts.
+
+            Leest uitvoerregels van de runner, voegt deze toe aan de outputbuffer en detecteert prompts voor gebruikersinvoer.
+            """
             for line in runner.stream_output():
                 with outputs[filename]["lock"]:
                     outputs[filename]["lines"].append(line)
@@ -74,6 +78,16 @@ def start(filename: str) -> Response:
 
 @runner.route("/show-output/<filename>")
 def show_output(filename):
+    """Toont de outputpagina voor het opgegeven configuratiebestand.
+
+    Rendert de runner.html-template met de opgegeven configuratienaam.
+
+    Args:
+        filename: De naam van het configuratiebestand waarvan de output getoond wordt.
+
+    Returns:
+        Response: Een Flask-rendered HTML-pagina met de output van de runner.
+    """
     return render_template("runner.html", config=filename)
 
 
