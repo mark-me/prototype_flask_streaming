@@ -24,6 +24,16 @@ outputs = {}  # filename: {'lines': [], 'prompt': None, 'awaiting': False, 'lock
 
 @runner.route("/start/<filename>", methods=['POST'])
 def start(filename: str) -> Response:
+    """Start de GenesisRunner voor het opgegeven configuratiebestand.
+
+    Initialiseert uitvoertracking en start de runner als deze inactief of afgerond is. Na het starten of als de runner al actief is, wordt doorgestuurd naar de outputpagina.
+
+    Args:
+        filename: De naam van het configuratiebestand waarvoor de runner gestart moet worden.
+
+    Returns:
+        Response: Een Flask-redirect naar de outputpagina, of een 400-fout als de runner al actief is.
+    """
     runner = config_registry.get_config_runner(filename)
     if filename not in outputs:
         outputs[filename] = {
@@ -43,9 +53,6 @@ def start(filename: str) -> Response:
         runner.start()
 
         def collector():
-            """Verzamelt uitvoerregels van de GenesisRunner en detecteert prompts.
-            # ... (bestaande collector-code)
-            """
             for line in runner.stream_output():
                 with outputs[filename]["lock"]:
                     outputs[filename]["lines"].append(line)
