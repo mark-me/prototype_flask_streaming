@@ -1,12 +1,12 @@
 services:
   genesis-web:
-    build: .
-    container_name: genesis_web
+    image: ghcr.io/mark-me/genesis-app:v0.0.1
+    container_name: genesis-web
     ports:
       - "5000:5000"
     volumes:
-      - ./configs:/app/configs   # lokale configs beschikbaar in container
-      - ./output:/app/output     # output logs toegankelijk
-      - ./genesis.py:/app/genesis.py  # jouw Genesis CLI tool
+      - ./configs:/configs   # lokale configs beschikbaar in container
+      - ./output:/output     # output logs toegankelijk
     environment:
+      - TZ=Europe/Amsterdam
       - FLASK_ENV=production

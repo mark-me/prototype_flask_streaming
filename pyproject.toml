@@ -1,9 +1,9 @@
 [project]
-name = "prototype_flask_streaming"
+name = "app"
 version = "0.1.0"
 requires-python = ">=3.13.0"
 authors = [
-    { name = "Mark Zwart", email = "m_zwart@pobox.com" },
+    { name = "Mark Zwart", email = "mark.zwart@pobox.com" },
 ]
 readme = "README.md"
 
@@ -25,10 +25,6 @@ dependencies = [
 
 
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build"]  # UV's build backend dependency
+build-backend = "uv_build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-dir]

@@ -12,8 +12,8 @@ from flask import (
 
 from logtools import get_logger
 
-from configs_registry import ConfigRegistry
-from routes import browser, config_handler, runner
+from .configs_registry import ConfigRegistry
+from .routes import browser, config_handler, runner
 
 logger = get_logger(__name__)
 

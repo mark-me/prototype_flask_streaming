@@ -10,7 +10,7 @@ from flask import (
     url_for,
 )
 
-from configs_registry import ConfigRegistry
+from ..configs_registry import ConfigRegistry
 
 config_handler = Blueprint("config_handler", __name__)
 

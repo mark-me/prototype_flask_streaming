@@ -2,7 +2,7 @@ import threading
 from datetime import datetime
 from pathlib import Path
 
-from genesis_runner import GenesisRunner
+from .genesis_runner import GenesisRunner
 from config import GenesisConfig
 from logtools import get_logger
 
