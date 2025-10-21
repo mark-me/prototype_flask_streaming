@@ -27,4 +27,4 @@ RUN uv pip install --no-cache-dir --system gunicorn
 EXPOSE 5000
 
 # Start commando (updated to use 'app' package)
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app.wsgi:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "start_app:app"]

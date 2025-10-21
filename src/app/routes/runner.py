@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 
 from ansi2html import Ansi2HTMLConverter
-from configs_registry import ConfigRegistry
+from ..configs_registry import ConfigRegistry
 from flask import (
     Blueprint,
     Response,
