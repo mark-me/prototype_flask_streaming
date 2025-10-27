@@ -18,7 +18,7 @@ BOLD_YELLOW = "\x1b[1;93m"
 UNDERLINE = "\x1b[4m"
 RESET = "\x1b[0m"
 
-logger = get_logger(__name__)
+logger = get_logger(name =__name__,  dir_output = '.', base_file = 'log_genesis.json')
 
 def main():
     """

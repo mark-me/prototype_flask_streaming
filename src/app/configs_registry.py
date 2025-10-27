@@ -6,7 +6,7 @@ from .genesis_runner import GenesisRunner
 from config import GenesisConfig
 from logtools import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger(name =__name__,  dir_output = '.', base_file = 'log_app.json')
 
 class ConfigRegistry:
     """Beheert het register van configuratiebestanden en hun metadata."""

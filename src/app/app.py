@@ -15,7 +15,7 @@ from logtools import get_logger
 from .configs_registry import ConfigRegistry
 from .routes import browser, config_handler, runner
 
-logger = get_logger(__name__)
+logger = get_logger(name =__name__,  dir_output = '.', base_file = 'log_app.json')
 
 app = Flask(__name__)
 app.secret_key = "supersecret"

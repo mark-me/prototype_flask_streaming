@@ -11,7 +11,7 @@ from .base import BaseConfigApplication
 from .deploy_mdde import DeploymentMDDEConfig, DeploymentMDDEConfigData
 from .devops import DevOpsConfig, DevOpsConfigData
 
-logger = get_logger(__name__)
+logger = get_logger(name =__name__,  dir_output = '.', base_file = 'log_morningstar.json')
 
 
 @dataclass
