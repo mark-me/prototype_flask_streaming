@@ -1,8 +1,8 @@
-# Documentatie: Gebruik van UV in plaats van pip
+# Package management
 
 ## 1. Inleiding
 
-In dit project maken we gebruik van **UV** (Universal Virtual Environment) voor het beheren van virtuele omgevingen en dependencies, in plaats van de traditionele `pip`. UV biedt een aantal voordelen die het beheren van omgevingen eenvoudiger, flexibeler en krachtiger maken, vooral in complexe projecten. In deze documentatie leggen we uit waarom UV wordt gekozen, wat de voordelen zijn, en hoe je de belangrijkste UV-commando's zoals `uv init`, `uv add`, `uv remove`, en `uv run` kunt gebruiken.
+In dit project maken we gebruik van **UV** (Universal Virtual environment) voor het beheren van virtuele omgevingen en dependencies, in plaats van de traditionele `pip`. UV biedt een aantal voordelen die het beheren van omgevingen eenvoudiger, flexibeler en krachtiger maken, vooral in complexe projecten. In deze documentatie leggen we uit waarom UV wordt gekozen, wat de voordelen zijn, en hoe je de belangrijkste UV-commando's zoals `uv init`, `uv add`, `uv remove`, en `uv run` kunt gebruiken.
 
 ## 2. Waarom UV en niet pip?
 
@@ -31,6 +31,8 @@ Voordat je met UV aan de slag kunt, moet je het eerst installeren. Dit kan met p
 ```bash
 pip install uv
 ```
+
+Mocht je uv buiten een virtual environment willen installeren kun je de [instructies](https://docs.astral.sh/uv/getting-started/installation/) volgen.
 
 ### Stap 2: Initialiseren van een nieuwe UV-omgeving
 
