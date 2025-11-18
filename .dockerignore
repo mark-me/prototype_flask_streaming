@@ -1,0 +1,11 @@
+.venv
+.git
+.gitignore
+docker-compose.yml
+Dockerfile
+__pycache__
+*.pyc
+*.egg-info
+build_image.sh
+configs
+intermediate

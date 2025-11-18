@@ -4,6 +4,7 @@ from pathlib import Path
 from time import sleep
 
 from tqdm import tqdm
+import webbrowser
 
 from config import GenesisConfig
 from logtools import get_logger
@@ -17,7 +18,7 @@ BOLD_YELLOW = "\x1b[1;93m"
 UNDERLINE = "\x1b[4m"
 RESET = "\x1b[0m"
 
-logger = get_logger(__name__)
+logger = get_logger(name =__name__,  dir_output = '.', base_file = 'log_genesis.json')
 
 def main():
     """
@@ -56,9 +57,9 @@ def main():
     logger.error("Dit is logger error")
 
 
-    for _ in tqdm(range(0, 50), desc="Progress 1", colour="blue"):
+    for _ in tqdm(range(0, 25), desc="Progress 1", colour="blue"):
         sleep(0.1)
-    for _ in tqdm(range(0, 25), desc="Progress 2", colour="magenta"):
+    for _ in tqdm(range(0, 10), desc="Progress 2", colour="magenta"):
         sleep(0.1)
 
     lst_answers_yes = ["", "J", "JA", "JAWOHL", "Y", "YES"]
@@ -87,6 +88,8 @@ def main():
                 f"{BOLD_MAGENTA}'{i}' regels.{RESET}",
                 file=sys.stdout,
             )
+
+    webbrowser.open("https://github.com/", new=0, autoraise=True)
 
     print(f"{BOLD_BLUE}Afgerond zonder fouten.{RESET}", file=sys.stdout)
 

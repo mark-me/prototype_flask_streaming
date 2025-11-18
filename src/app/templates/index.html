@@ -1,0 +1,235 @@
+    {% extends "base.html" %}
+    {% block title %}Home{% endblock %}
+
+    {% block content %}
+    <div class="mt-4">
+            <!-- Introductie -->
+        <div class="row align-items-center mb-5">
+            <!-- Logo links -->
+            <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
+                <img src="{{ url_for('static', filename='images/logo.png') }}"
+                    alt="Genesis Logo"
+                    class="img-fluid"
+                    style="max-width: 125px; height: auto;">
+            </div>
+            <!-- Tekst rechts -->
+            <div class="col-md-10">
+                <h1 class="display-5 fw-bold">Welkom bij Genesis</h1>
+                <p class="lead text-muted">
+                    Met Genesis Web beheer je eenvoudig configuratiebestanden, voer je Genesis uit,
+                    verken je de resultaten en kun je issues in de modellen identificeren.
+                    Alles overzichtelijk vanuit één webinterface.
+                </p>
+            </div>
+        </div>
+
+        <!-- Stappenplan -->
+        <div class="row text-center mb-5">
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-secondary">
+                            <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">1. Kiezen</h5>
+                        <p class="card-text">Selecteer, bewerk of maak een configuratiebestand.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-pencil-square" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">2. Bewerken</h5>
+                        <p class="card-text">Open de ingebouwde editor om je configuratie direct aan te passen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-success">
+                            <i class="bi bi-play-circle" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">3. Uitvoeren</h5>
+                        <p class="card-text">Start Genesis en volg de voortgang live in de console-uitvoer.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="mb-3 text-primary">
+                            <i class="bi bi-search" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title">4. Verkennen</h5>
+                        <p class="card-text">Verken resultaten en aangetroffen issues in de modelbestanden.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuratie bestanden overzicht -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Beschikbare configuratiebestanden</h5>
+            </div>
+            <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="15%"><a href="?sort=name&order={% if sort_by == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}">Naam</a></th>
+                    <th>Actie</th>
+                    <th width="15%"><a href="?sort=created&order={% if sort_by == 'created' and order == 'asc' %}desc{% else %}asc{% endif %}">Creatiedatum</a></th>
+                    <th width="15%"><a href="?sort=modified&order={% if sort_by == 'modified' and order == 'asc' %}desc{% else %}asc{% endif %}">Wijzigingsdatum</a></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cfg in configs %}
+                <tr id="row-{{ loop.index }}">
+                    <td>
+                    <i class="bi bi-filetype-yml me-2"></i> {{ cfg.path_config }}
+                    </td>
+                    <td>
+                        <div id="action-{{ cfg.path_config }}" class="d-flex gap-2">
+                            <a href="{{ url_for('config_handler.config_edit', filename=cfg.path_config) }}" target="_blank" class="btn btn-sm btn-warning action-btn">
+                                <i class="bi bi-pencil me-2"></i> Bewerken
+                            </a>
+                            <form action="/runner/start/{{ cfg.path_config }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-success action-btn">
+                                    <i class="bi bi-play me-2" id="play-icon-{{ loop.index }}" style="display:{{ 'none' if cfg.status in ['running','finished'] else 'inline-block' }}"></i>
+                                    <i class="bi bi-check-circle me-2" id="check-icon-{{ loop.index }}" style="display:{{ 'inline-block' if cfg.status == 'finished' else 'none' }}"></i>
+                                    Uitvoeren
+                                </button>
+                            </form>
+                            {% if cfg.exists_output %}
+                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" target="_blank" class="btn btn-sm btn-primary action-btn">
+                                    <i class="bi bi-search me-2"></i> Resultaten
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('browser.browse', req_path=cfg.dir_output) }}" class="btn btn-sm btn-primary disabled action-btn">
+                                    <i class="bi bi-search me-2"></i> Resultaten
+                                </a>
+                            {% endif %}
+                            <button class="btn btn-sm btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal" data-filename="{{ cfg.path_config }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        {% if cfg.created %}
+                            {{ cfg.created.strftime("%Y-%m-%d %H:%M") }}
+                        {% else %}
+                            <span class="text-muted">Onbekend</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cfg.modified %}
+                            {{ cfg.modified.strftime("%Y-%m-%d %H:%M") }}
+                        {% else %}
+                            <span class="text-muted">Onbekend</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3 text-start">
+            <a href="{{ url_for('config_handler.config_new') }}" class="btn btn-secondary">
+                <i class="bi bi-file-earmark-plus"></i> Nieuwe Config
+            </a>
+        </div>
+    </div>
+
+    {% include "_modal_continue_run.html" %}
+    {% include "_modal_config_delete.html" %}
+
+    {% endblock %}
+
+    {% block scripts %}
+        <script type="module" src="{{ url_for('static', filename='js/modal.js') }}"></script>
+        <script>
+            // Globale sendInput-functie voor de Ja/Nee-knoppen (gebruik sendModalInput erachter)
+            window.sendInput = function(answer) {
+                const configFile = document.getElementById('config')?.dataset.filename || '{{ config }}';
+                if (typeof sendModalInput === 'function') {
+                    sendModalInput(configFile, answer, '/runner/input');  // Post naar backend
+                    console.log('Quick input verstuurd:', answer);
+                } else {
+                    console.error('sendModalInput niet gevonden!');
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM geladen – check modal.js...');
+
+                // Initialiseer modal-setup
+                if (typeof setupModalCleanup === 'function') {
+                    setupModalCleanup();
+                    console.log('Modal cleanup geïnitialiseerd.');
+                } else {
+                    console.error('setupModalCleanup niet gevonden!');
+                }
+
+                // Huidige config ophalen
+                const configFile = document.getElementById('config')?.dataset.filename || '{{ config }}';
+                console.log('Config file:', configFile);
+
+                // Anti-duplicate: Track of modal al getoond voor deze prompt
+                let lastPromptHash = null;
+
+                // Start polling (met extra logs en fixes)
+                if (typeof startPolling === 'function') {
+                    console.log('Start polling op /runner/status...');
+                    startPolling('/runner/status', function(statusData) {
+                        console.log('Polling update:', statusData);
+                        if (configFile && statusData[configFile]) {
+                            const status = statusData[configFile];
+                            console.log('Status voor', configFile, ':', status);
+
+                            // Clean ANSI-codes uit prompt (verwijder \x1B[...m)
+                            let cleanPrompt = status.prompt || '';
+                            if (cleanPrompt) {
+                                cleanPrompt = cleanPrompt.replace(/\x1B\[[0-9;]*m/g, '').trim();  // Strip ANSI
+                                console.log('Gecleaned prompt:', cleanPrompt);
+                            }
+
+                            if (status.status === 'awaiting_input' && cleanPrompt) {
+                                // Anti-duplicate: Hash de prompt om te checken of het nieuw is
+                                const promptHash = btoa(cleanPrompt).slice(0, 10);  // Simple hash
+                                if (promptHash !== lastPromptHash) {
+                                    lastPromptHash = promptHash;
+                                    console.log('Nieuwe prompt gedetecteerd! Toon modal...');
+                                    showModal(configFile, cleanPrompt, { broadcast: false });  // <-- Tijdelijk false voor test
+                                } else {
+                                    console.log('Prompt al getoond, skip...');
+                                }
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    console.error('startPolling niet gevonden!');
+                }
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const deleteModal = document.getElementById('deleteModal');
+                deleteModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget; // Button that triggered the modal
+                    const filename = button.getAttribute('data-filename'); // Get filename
+                    const configName = document.getElementById('configName'); // Element to show filename
+                    const deleteForm = document.getElementById('deleteForm'); // Form element
+                    // Update modal content
+                    configName.textContent = filename;
+                    deleteForm.action = `/configs/delete/${filename}`; // Set form action
+                });
+            });
+        </script>
+    {% endblock %}

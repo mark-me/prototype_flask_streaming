@@ -15,7 +15,7 @@ from .integrator import IntegratorConfig, IntegratorConfigData
 from .generator import GeneratorConfig, GeneratorConfigData
 from .power_designer import PowerDesignerConfig, PowerDesignerConfigData
 
-logger = get_logger(__name__)
+logger = get_logger(name =__name__,  dir_output = '.', base_file = 'log_genesis.json')
 
 
 @dataclass

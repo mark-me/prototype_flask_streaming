@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Genesis draait{% endblock %}
+
+{% block content %}
+    <div id="config" data-filename="{{ config }}"></div>
+    <h1>Genesis draait met <code>{{ config }}</code></h1>
+
+    <div class="card mt-3">
+        <div class="card-body console-box" id="console"></div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{{ url_for('index') }}">Terug</a>
+    </div>
+
+    {% include "_modal_continue_run.html" %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/runner.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+    <script>
+        // Globale sendInput-functie voor de Ja/Nee-knoppen (gebruik sendModalInput erachter)
+        window.sendInput = function(answer) {
+            const configFile = document.getElementById('config')?.dataset.filename || '{{ config }}';
+            if (typeof sendModalInput === 'function') {
+                sendModalInput(configFile, answer, '/runner/input');  // Post naar backend
+                console.log('Quick input verstuurd:', answer);
+            } else {
+                console.error('sendModalInput niet gevonden!');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM geladen – check modal.js...');
+
+            // Initialiseer modal-setup
+            if (typeof setupModalCleanup === 'function') {
+                setupModalCleanup();
+                console.log('Modal cleanup geïnitialiseerd.');
+            } else {
+                console.error('setupModalCleanup niet gevonden!');
+            }
+
+            // Huidige config ophalen
+            const configFile = document.getElementById('config')?.dataset.filename || '{{ config }}';
+            console.log('Config file:', configFile);
+
+            // Anti-duplicate: Track of modal al getoond voor deze prompt
+            let lastPromptHash = null;
+
+            // Start polling (met extra logs en fixes)
+            if (typeof startPolling === 'function') {
+                console.log('Start polling op /runner/status...');
+                startPolling('/runner/status', function(statusData) {
+                    console.log('Polling update:', statusData);
+                    if (configFile && statusData[configFile]) {
+                        const status = statusData[configFile];
+                        console.log('Status voor', configFile, ':', status);
+
+                        // Clean ANSI-codes uit prompt (verwijder \x1B[...m)
+                        let cleanPrompt = status.prompt || '';
+                        if (cleanPrompt) {
+                            cleanPrompt = cleanPrompt.replace(/\x1B\[[0-9;]*m/g, '').trim();  // Strip ANSI
+                            console.log('Gecleaned prompt:', cleanPrompt);
+                        }
+
+                        if (status.status === 'awaiting_input' && cleanPrompt) {
+                            // Anti-duplicate: Hash de prompt om te checken of het nieuw is
+                            const promptHash = btoa(cleanPrompt).slice(0, 10);  // Simple hash
+                            if (promptHash !== lastPromptHash) {
+                                lastPromptHash = promptHash;
+                                console.log('Nieuwe prompt gedetecteerd! Toon modal...');
+                                showModal(configFile, cleanPrompt, { broadcast: false });  // <-- Tijdelijk false voor test
+                            } else {
+                                console.log('Prompt al getoond, skip...');
+                            }
+                        }
+                    }
+                }, 1000);
+            } else {
+                console.error('startPolling niet gevonden!');
+            }
+        });
+    </script>
+{% endblock %}
