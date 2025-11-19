@@ -17,6 +17,7 @@ config_handler = Blueprint("config_handler", __name__)
 CONFIG_DIR = Path("configs").resolve()
 config_registry = ConfigRegistry()
 
+
 @config_handler.route("/delete/<filename>", methods=["POST"])
 def config_delete(filename: str):
     """Verwijdert het geselecteerde configuratiebestand."""
@@ -146,7 +147,9 @@ def handle_config_new_post(configs: list):
             f"✅ Nieuwe config '{new_name}' aangemaakt op basis van '{base_file}'",
             "success",
         )
-        return redirect(url_for("config_handler.config_edit", filename=new_name))  # Redirect naar editor
+        return redirect(
+            url_for("config_handler.config_edit", filename=new_name)
+        )  # Redirect naar editor
     return render_template("config_handler/config_new.html", configs=configs)
 
 
