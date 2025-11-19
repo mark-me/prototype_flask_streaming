@@ -121,3 +121,7 @@ Wanneer Genesis een vraag stelt:
 | runner.js         | Live streaming via Server-Sent Events (SSE), Ontvangt uitvoer van /runner/stream/<config> + tqdm-ondersteuning + autoscroll |
 | modal.js          | Polling, prompt-detectie, tab-synchronisatie via BroadcastChannel             |
 | close_window.js   | Venster sluiten (CSV pop-up)                                                  |
+
+## API
+
+### :: src.app.app
