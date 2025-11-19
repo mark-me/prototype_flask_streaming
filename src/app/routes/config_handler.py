@@ -146,7 +146,7 @@ def handle_config_new_post(configs: list):
             f"✅ Nieuwe config '{new_name}' aangemaakt op basis van '{base_file}'",
             "success",
         )
-        return redirect(url_for("config_handler/config_edit", filename=new_name))  # Redirect naar editor
+        return redirect(url_for("config_handler.config_edit", filename=new_name))  # Redirect naar editor
     return render_template("config_handler/config_new.html", configs=configs)
 
 
