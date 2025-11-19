@@ -56,7 +56,7 @@ The web interface will be available at [http://127.0.0.1:5000](http://127.0.0.1:
 
 ## Notes
 
-* Only .yml configuration files are supported.
+* Only .yml (or .yaml) configuration files are supported.
 * Only .csv log files can be downloaded.
 This application is intended as a prototype and is not production-ready without further security measures.
 License
