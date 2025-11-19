@@ -20,11 +20,13 @@ This project is a prototype web application built with Flask that allows you to 
    - [PyYAML](https://pyyaml.org/) - for reading YAML files
    - [Markdown](https://python-markdown.github.io/) - To turn markdown into html content
    - [ansi2html](https://ansi2html.readthedocs.io/) - To capture ANSI escape sequences in the CLI output and turn it into html formatting
+   - [dacite](https://pypi.org/project/dacite/) - Creating dataclasses from dictionaries
+   - [python-json-logger](https://pypi.org/project/python-json-logger/) - Produces JSON logs when using Python's logging package
 
    Install the required packages with pip:
 
    ```bash
-   pip install flask pyyaml markdown ansi2html
+   pip install flask pyyaml markdown ansi2html dacite python-json-logger
    ```
 
 ## Project Structure
