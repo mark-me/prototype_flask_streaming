@@ -9,6 +9,7 @@ readme = "README.md"
 
 dependencies = [
     "ansi2html>=1.9.2",
+    "dacite>=1.9.2",
     "flask>=3.1.2",
     "markdown>=3.10",
     "python-json-logger>=4.0.0",
