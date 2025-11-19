@@ -73,7 +73,7 @@ def start(filename: str) -> Response:
         return redirect(url_for('runner.show_output', filename=filename))
     else:
         # Optioneel: redirect ook hier
-        return redirect(url_for('runner.show_output', filename=filename)), 400  # Of behoud jsonify als je wilt
+        return redirect(url_for('runner.show_output', filename=filename)) # , 400  # Of behoud jsonify als je wilt
 
 
 @runner.route("/show-output/<filename>")
